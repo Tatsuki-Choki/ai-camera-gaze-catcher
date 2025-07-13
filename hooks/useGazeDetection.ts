@@ -71,10 +71,10 @@ export const useGazeDetection = (
       return;
     }
     
-    // Reset performance timer if video was seeked
-    if (Math.abs(video.currentTime - lastVideoTimeRef.current) > 1) {
-      console.log("Video seeked, resetting performance timer");
-      performanceStartRef.current = performance.now();
+    // Reset performance timer if video was seeked or restarted
+    if (Math.abs(video.currentTime - lastVideoTimeRef.current) > 1 || video.currentTime < lastVideoTimeRef.current) {
+      console.log("Video seeked or restarted, resetting performance timer");
+      performanceStartRef.current = performance.now() - (video.currentTime * 1000);
       lastTimestampRef.current = 0;
     }
 
@@ -101,16 +101,18 @@ export const useGazeDetection = (
       
       console.log(`Processing frame at ${video.currentTime.toFixed(2)}s / ${video.duration.toFixed(2)}s (readyState: ${video.readyState}, progress: ${newProgress.toFixed(1)}%)`);
       
-      // Use performance.now() for MediaPipe timestamp to ensure monotonic increase
-      const currentPerformanceTime = performance.now() - performanceStartRef.current;
-      const timestampMicros = Math.round(currentPerformanceTime * 1000); // Convert to microseconds
+      // Use video.currentTime for MediaPipe timestamp to ensure monotonic increase
+      const timestampMicros = Math.round(video.currentTime * 1000000); // Convert seconds to microseconds
       
-      console.log(`Calling detectForVideo - video time: ${video.currentTime.toFixed(3)}s, timestamp: ${timestampMicros}μs`);
+      // Ensure timestamp is always increasing
+      const safeTimestamp = Math.max(timestampMicros, lastTimestampRef.current + 1);
+      
+      console.log(`Calling detectForVideo - video time: ${video.currentTime.toFixed(3)}s, timestamp: ${safeTimestamp}μs, lastTimestamp: ${lastTimestampRef.current}μs`);
       
       try {
-        const results: FaceLandmarkerResult = faceLandmarkerRef.current.detectForVideo(video, timestampMicros);
+        const results: FaceLandmarkerResult = faceLandmarkerRef.current.detectForVideo(video, safeTimestamp);
         console.log("detectForVideo completed, results:", results ? "Found faces: " + (results.faceLandmarks?.length || 0) : "No results");
-        lastTimestampRef.current = timestampMicros;
+        lastTimestampRef.current = safeTimestamp;
 
     
     if (results.faceBlendshapes && results.faceBlendshapes.length > 0) {
@@ -197,8 +199,9 @@ export const useGazeDetection = (
     reset();
     setStatus(AnalysisStatus.Processing);
     
-    // Reset performance timer for this analysis session
+    // Reset performance timer and timestamp for this analysis session
     performanceStartRef.current = performance.now();
+    lastTimestampRef.current = 0;
     
     // Wait for video to be ready
     const waitForVideo = () => {
