@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clipboard Test</title>
+</head>
+<body>
+    <h1>クリップボードAPIテスト</h1>
+    <button id="testBtn">クリップボードアクセスをテスト</button>
+    <div id="result"></div>
+    
+    <h2>画像コピーテスト</h2>
+    <canvas id="testCanvas" width="200" height="200" style="border: 1px solid black;"></canvas>
+    <br>
+    <button id="copyCanvasBtn">画像をコピー</button>
+    
+    <script>
+        const resultDiv = document.getElementById('result');
+        
+        // Draw something on canvas
+        const canvas = document.getElementById('testCanvas');
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = 'blue';
+        ctx.fillRect(50, 50, 100, 100);
+        ctx.fillStyle = 'white';
+        ctx.font = '20px Arial';
+        ctx.fillText('TEST', 70, 110);
+        
+        document.getElementById('testBtn').addEventListener('click', async () => {
+            try {
+                // Check if Clipboard API is available
+                if (!navigator.clipboard) {
+                    resultDiv.innerHTML = '<p style="color: red;">Clipboard API not available</p>';
+                    return;
+                }
+                
+                // Check permissions
+                const permissionStatus = await navigator.permissions.query({ name: 'clipboard-write' });
+                resultDiv.innerHTML = `<p>Clipboard permission: ${permissionStatus.state}</p>`;
+                
+                // Try to write text
+                await navigator.clipboard.writeText('Test text');
+                resultDiv.innerHTML += '<p style="color: green;">Text copy successful!</p>';
+                
+                // Check ClipboardItem support
+                if (window.ClipboardItem) {
+                    resultDiv.innerHTML += '<p style="color: green;">ClipboardItem is supported</p>';
+                } else {
+                    resultDiv.innerHTML += '<p style="color: red;">ClipboardItem is NOT supported</p>';
+                }
+                
+            } catch (err) {
+                resultDiv.innerHTML = `<p style="color: red;">Error: ${err.message}</p>`;
+            }
+        });
+        
+        document.getElementById('copyCanvasBtn').addEventListener('click', async () => {
+            try {
+                canvas.toBlob(async (blob) => {
+                    try {
+                        await navigator.clipboard.write([
+                            new ClipboardItem({
+                                'image/png': blob
+                            })
+                        ]);
+                        resultDiv.innerHTML = '<p style="color: green;">Image copied successfully!</p>';
+                    } catch (err) {
+                        resultDiv.innerHTML = `<p style="color: red;">Image copy failed: ${err.message}</p>`;
+                    }
+                }, 'image/png');
+            } catch (err) {
+                resultDiv.innerHTML = `<p style="color: red;">Error: ${err.message}</p>`;
+            }
+        });
+    </script>
+</body>
+</html>
