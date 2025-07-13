@@ -19,6 +19,7 @@ export const useGazeDetection = (
   const lastTimestampRef = useRef<number>(0);
   const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const performanceStartRef = useRef<number>(0);
+  const timestampCounterRef = useRef<number>(0);
 
   // Initialize FaceLandmarker
   useEffect(() => {
@@ -49,6 +50,7 @@ export const useGazeDetection = (
     frameCountRef.current = 0;
     lastVideoTimeRef.current = -1;
     lastTimestampRef.current = 0;
+    timestampCounterRef.current = 0;
     performanceStartRef.current = performance.now();
     if (requestRef.current != null) {
         cancelAnimationFrame(requestRef.current);
@@ -71,10 +73,11 @@ export const useGazeDetection = (
       return;
     }
     
-    // Reset performance timer if video was seeked or restarted
+    // Reset timestamp counter if video was seeked or restarted
     if (Math.abs(video.currentTime - lastVideoTimeRef.current) > 1 || video.currentTime < lastVideoTimeRef.current) {
-      console.log("Video seeked or restarted, resetting performance timer");
+      console.log("Video seeked or restarted, resetting timestamp counter");
       performanceStartRef.current = performance.now() - (video.currentTime * 1000);
+      timestampCounterRef.current = 0;
       lastTimestampRef.current = 0;
     }
 
@@ -101,11 +104,10 @@ export const useGazeDetection = (
       
       console.log(`Processing frame at ${video.currentTime.toFixed(2)}s / ${video.duration.toFixed(2)}s (readyState: ${video.readyState}, progress: ${newProgress.toFixed(1)}%)`);
       
-      // Use video.currentTime for MediaPipe timestamp to ensure monotonic increase
-      const timestampMicros = Math.round(video.currentTime * 1000000); // Convert seconds to microseconds
-      
-      // Ensure timestamp is always increasing
-      const safeTimestamp = Math.max(timestampMicros, lastTimestampRef.current + 1);
+      // Use a simple counter for MediaPipe timestamp to ensure monotonic increase
+      // Increment by 33333 microseconds (approximately 30fps)
+      timestampCounterRef.current += 33333;
+      const safeTimestamp = timestampCounterRef.current;
       
       console.log(`Calling detectForVideo - video time: ${video.currentTime.toFixed(3)}s, timestamp: ${safeTimestamp}μs, lastTimestamp: ${lastTimestampRef.current}μs`);
       
@@ -201,6 +203,7 @@ export const useGazeDetection = (
     
     // Reset performance timer and timestamp for this analysis session
     performanceStartRef.current = performance.now();
+    timestampCounterRef.current = 0;
     lastTimestampRef.current = 0;
     
     // Wait for video to be ready
