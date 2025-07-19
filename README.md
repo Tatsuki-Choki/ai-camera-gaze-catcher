@@ -62,4 +62,4 @@
 
 -   **プライバシー保護**: すべての動画解析処理は、お使いのブラウザ内で完結します。動画データが外部のサーバーにアップロードされることは一切ありません。
 -   **パフォーマンス**: アプリケーションは、高速な処理のためにGPUアクセラレーションの利用を試みます。お使いのデバイスが対応していない場合でも、自動的にCPU処理に切り替わるため、幅広い環境で動作します。
--   **使用技術**: React, TypeScript, Tailwind CSS, MediaPipe (Face Landmarker)
+-   **使用技術**: React, TypeScript, Tailwind CSS, MediaPipe (Face Landmarker)# Force Vercel rebuild
