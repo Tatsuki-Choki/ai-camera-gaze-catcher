@@ -1,6 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { AnalysisStatus, type Screenshot, type Rect } from '../types';
-import { waitOpenCvReady, loadClassifier, detectFaces, detectEyes } from 'src/services/openCvService';
+import { waitOpenCvReady, loadClassifier, detectFaces, detectEyes } from '../src/services/openCvService';
 
 // OpenCV.jsの型定義は提供されていないため、anyとして扱う
 declare const cv: any;

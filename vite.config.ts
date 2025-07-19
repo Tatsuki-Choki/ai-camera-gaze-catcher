@@ -4,6 +4,7 @@ import { defineConfig, loadEnv } from 'vite';
 export default defineConfig(({ mode }) => {
     const env = loadEnv(mode, '.', '');
     return {
+      base: './',
       define: {},
       resolve: {
         alias: {
@@ -18,6 +19,11 @@ export default defineConfig(({ mode }) => {
           'Cross-Origin-Embedder-Policy': 'require-corp',
           'Cross-Origin-Opener-Policy': 'same-origin',
         }
+      },
+      build: {
+        outDir: 'dist',
+        assetsDir: 'assets',
+        emptyOutDir: true
       }
     };
 });
