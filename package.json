@@ -1,5 +1,5 @@
 {
-  "name": "ai-camera-gaze-catcher",
+  "name": "ai-カメラ目線キャッチャー",
   "private": true,
   "version": "1.0.0",
   "description": "AI-powered application that detects when users are looking at the camera during video playback",
