@@ -41,13 +41,13 @@ export const ResultsGrid: React.FC<ResultsGridProps> = ({ screenshots }) => {
   };
   return (
     <div className="mt-6 sm:mt-8 animate-slide-up">
-      <h2 className="text-base sm:text-lg font-medium text-on-surface mb-3 sm:mb-4">検出されたシーン</h2>
+      <h2 className="text-lg font-semibold text-gray-900 mb-4">検出されたシーン</h2>
       {screenshots.length === 0 ? (
-        <div className="text-center py-6 sm:py-8 bg-surface rounded-xl sm:rounded-2xl border border-outline-variant">
-          <p className="text-xs sm:text-sm text-on-surface-variant">カメラ目線のシーンがまだ見つかっていません</p>
+        <div className="text-center py-8 bg-white rounded-lg border border-gray-200">
+          <p className="text-sm text-gray-500">カメラ目線のシーンがまだ見つかっていません</p>
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {screenshots.map((screenshot) => (
             <ScreenshotCard 
               key={screenshot.id} 

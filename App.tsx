@@ -63,19 +63,19 @@ export default function App(): React.ReactNode {
   };
 
   return (
-    <div className="min-h-screen bg-surface-container">
-      <div className="max-w-3xl mx-auto px-4 py-4 sm:py-6 md:py-8">
-        <header className="mb-6 sm:mb-8">
-          <h1 className="text-xl sm:text-2xl font-medium text-on-surface mb-1 sm:mb-2">AI カメラ目線キャッチャー</h1>
-          <p className="text-on-surface-variant text-xs sm:text-sm">動画から最高のカメラ目線シーンを自動で検出</p>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        <header className="text-center mb-10">
+          <h1 className="text-3xl font-bold text-gray-900 mb-3">AI カメラ目線キャッチャー</h1>
+          <p className="text-gray-600">動画から最高のカメラ目線シーンを自動で検出</p>
         </header>
 
         <main className="flex flex-col gap-4">
           {!videoSrc ? (
             <VideoSelector onVideoSelect={handleVideoSelect} />
           ) : (
-            <div className="bg-surface rounded-2xl shadow-elevation-1 overflow-hidden animate-fade-in">
-              <div className="relative aspect-video bg-black">
+            <div className="bg-white rounded-xl shadow-lg overflow-hidden animate-fade-in">
+              <div className="relative aspect-video bg-black rounded-t-xl overflow-hidden">
               <video 
                 ref={videoRef} 
                 src={videoSrc} 

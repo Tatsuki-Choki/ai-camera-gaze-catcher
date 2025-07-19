@@ -125,7 +125,7 @@ export const ScreenshotCard: React.FC<ScreenshotCardProps> = ({ screenshot, onEx
   };
 
   return (
-    <div className="group relative bg-surface rounded-xl overflow-hidden transition-all hover:shadow-elevation-2 cursor-pointer">
+    <div className="group relative bg-white rounded-lg overflow-hidden transition-all hover:shadow-xl cursor-pointer border border-gray-200">
       <img 
         src={screenshot.dataUrl} 
         alt={`Screenshot at ${timestampFormatted}`} 
