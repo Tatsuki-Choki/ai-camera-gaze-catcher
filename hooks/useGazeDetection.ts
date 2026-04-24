@@ -1,240 +1,230 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { AnalysisStatus, type Screenshot, type Rect } from '../types';
-import { waitOpenCvReady, loadClassifier, detectFaces, detectEyes } from '../src/services/openCvService';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import type { Matrix } from '@mediapipe/tasks-vision';
+import { createFaceLandmarker, getBlendshapeScore } from '../services/mediaPipeService';
+import { scoreGaze } from '../services/gazeScoring';
+import { AnalysisStatus, type GazeScoreInput, type ScanMode, type Screenshot } from '../types';
 
-// OpenCV.jsの型定義は提供されていないため、anyとして扱う
-declare const cv: any;
+const scanIntervals: Record<ScanMode, number> = {
+  fast: 1,
+  standard: 0.5,
+  precise: 0.25,
+};
+
+const duplicateWindowSeconds = 1.5;
+
+const waitForMetadata = (video: HTMLVideoElement): Promise<void> => {
+  if (Number.isFinite(video.duration) && video.videoWidth > 0 && video.readyState >= 2) {
+    return Promise.resolve();
+  }
+
+  return new Promise((resolve, reject) => {
+    const cleanup = () => {
+      video.removeEventListener('loadeddata', handleLoaded);
+      video.removeEventListener('error', handleError);
+    };
+    const handleLoaded = () => {
+      cleanup();
+      resolve();
+    };
+    const handleError = () => {
+      cleanup();
+      reject(new Error('動画を読み込めませんでした。'));
+    };
+
+    video.addEventListener('loadeddata', handleLoaded, { once: true });
+    video.addEventListener('error', handleError, { once: true });
+    video.load();
+  });
+};
+
+const seekTo = (video: HTMLVideoElement, time: number): Promise<void> => (
+  new Promise((resolve) => {
+    const targetTime = Math.min(time, Math.max(0, video.duration - 0.001));
+    if (Math.abs(video.currentTime - targetTime) < 0.001 && video.readyState >= 2) {
+      resolve();
+      return;
+    }
+
+    const timeoutId = window.setTimeout(resolve, 1200);
+    const handleSeeked = () => {
+      window.clearTimeout(timeoutId);
+      resolve();
+    };
+
+    video.addEventListener('seeked', handleSeeked, { once: true });
+    video.currentTime = targetTime;
+  })
+);
+
+const captureFrame = (video: HTMLVideoElement, canvas: HTMLCanvasElement): string => {
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const context = canvas.getContext('2d');
+  if (!context) {
+    throw new Error('画像生成に失敗しました。');
+  }
+  context.drawImage(video, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL('image/jpeg', 0.92);
+};
+
+const getHeadPose = (matrix: Matrix | undefined) => {
+  const data = matrix?.data ?? [];
+  if (data.length < 11) {
+    return { yaw: 0, pitch: 0, roll: 0 };
+  }
+
+  const yaw = Math.atan2(data[8], data[10]);
+  const pitch = Math.atan2(-data[9], Math.hypot(data[8], data[10]));
+  const roll = Math.atan2(data[4], data[0]);
+
+  return { yaw, pitch, roll };
+};
 
 export const useGazeDetection = (
-  videoRef: React.RefObject<HTMLVideoElement>,
+  videoRef: React.RefObject<HTMLVideoElement | null>,
   sensitivity: number,
-  onNewScreenshot: (screenshot: Screenshot) => void
+  scanMode: ScanMode,
+  onCandidate: (screenshot: Screenshot) => void,
 ) => {
   const [status, setStatus] = useState<AnalysisStatus>(AnalysisStatus.Idle);
   const [progress, setProgress] = useState(0);
-  const requestRef = useRef<number | null>(null);
-  const lastCaptureTimeRef = useRef<number>(0);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  
-  // OpenCV分類器の参照
-  const faceClassifier = useRef<any>(null);
-  const eyeClassifier = useRef<any>(null);
-  
-  // Video processing refs
-  const lastVideoTimeRef = useRef<number>(-1);
-  const progressIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const canceledRef = useRef(false);
+  const runIdRef = useRef(0);
+  const latestCandidateRef = useRef<Screenshot | null>(null);
 
-  // Initialize OpenCV and load classifiers
   useEffect(() => {
-    const init = async () => {
+    let mounted = true;
+
+    const initialize = async () => {
       try {
-        console.log("Initializing OpenCV service...");
         setStatus(AnalysisStatus.Initializing);
-
-        await waitOpenCvReady();
-        console.log("OpenCV is ready. Loading classifiers...");
-
-        const faceClassifierFile = await loadClassifier('opencv/haarcascade_frontalface_default.xml');
-        const eyeClassifierFile = await loadClassifier('opencv/haarcascade_eye.xml');
-        
-        faceClassifier.current = new cv.CascadeClassifier();
-        faceClassifier.current.load(faceClassifierFile);
-
-        eyeClassifier.current = new cv.CascadeClassifier();
-        eyeClassifier.current.load(eyeClassifierFile);
-
-        console.log("Classifiers loaded successfully.");
-        setStatus(AnalysisStatus.Idle);
-      } catch (e) {
-        console.error("Failed to initialize OpenCV classifiers:", e);
-        setStatus(AnalysisStatus.Error);
+        await createFaceLandmarker();
+        if (mounted) {
+          setStatus(AnalysisStatus.Idle);
+        }
+      } catch {
+        if (mounted) {
+          setStatus(AnalysisStatus.Error);
+        }
       }
     };
-    init();
 
-    // Create a canvas for drawing frames
-    if (!canvasRef.current) {
-        canvasRef.current = document.createElement('canvas');
-    }
+    canvasRef.current = document.createElement('canvas');
+    void initialize();
 
-    // Cleanup classifiers on unmount
     return () => {
-        faceClassifier.current?.delete();
-        eyeClassifier.current?.delete();
+      mounted = false;
+      canceledRef.current = true;
+      runIdRef.current += 1;
     };
   }, []);
 
   const reset = useCallback(() => {
-    setStatus(AnalysisStatus.Idle);
+    canceledRef.current = true;
+    runIdRef.current += 1;
+    latestCandidateRef.current = null;
     setProgress(0);
-    lastCaptureTimeRef.current = 0;
-    lastVideoTimeRef.current = -1;
-    if (requestRef.current != null) {
-        cancelAnimationFrame(requestRef.current);
-        requestRef.current = null;
-    }
-    if (progressIntervalRef.current != null) {
-        clearInterval(progressIntervalRef.current);
-        progressIntervalRef.current = null;
-    }
+    setStatus(AnalysisStatus.Idle);
   }, []);
 
-  const detectGaze = useCallback(() => {
+  const cancelAnalysis = useCallback(() => {
+    canceledRef.current = true;
+    runIdRef.current += 1;
+    setStatus(AnalysisStatus.Canceled);
+  }, []);
+
+  const startAnalysis = useCallback(async () => {
     const video = videoRef.current;
-    if (!video || video.paused || video.ended || !faceClassifier.current || !eyeClassifier.current) {
-      if(video && video.ended) {
-        console.log("Video ended");
-        setStatus(AnalysisStatus.Done);
-        setProgress(100);
-      }
+    const canvas = canvasRef.current;
+
+    if (!video || !canvas) {
+      setStatus(AnalysisStatus.Error);
       return;
     }
 
-    if (video.readyState < 2) {
-      requestRef.current = requestAnimationFrame(detectGaze);
-      return;
-    }
-    
-    // Always update progress
-    const newProgress = (video.currentTime / video.duration) * 100;
-    setProgress(newProgress);
-
-    // Skip processing if video time hasn't changed enough
-    const timeDiff = Math.abs(video.currentTime - lastVideoTimeRef.current);
-    if (timeDiff < 0.066) { // Process at ~15 FPS
-      requestRef.current = requestAnimationFrame(detectGaze);
-      return;
-    }
-    lastVideoTimeRef.current = video.currentTime;
-
-    const srcMat = new cv.Mat(video.videoHeight, video.videoWidth, cv.CV_8UC4);
-    const cap = new cv.VideoCapture(video);
-    cap.read(srcMat);
+    const runId = runIdRef.current + 1;
+    runIdRef.current = runId;
+    canceledRef.current = false;
+    latestCandidateRef.current = null;
+    setProgress(0);
+    setStatus(AnalysisStatus.Processing);
 
     try {
-      const faces = detectFaces(srcMat, faceClassifier.current);
+      await waitForMetadata(video);
+      const landmarker = await createFaceLandmarker();
+      const duration = video.duration;
+      const interval = scanIntervals[scanMode];
 
-      if (faces.length > 0) {
-        // For simplicity, use the largest face found
-        const mainFaceRect = faces.sort((a: Rect, b: Rect) => (b.width * b.height) - (a.width * a.height))[0];
-        const faceMat = srcMat.roi(mainFaceRect);
-        
-        const eyes = detectEyes(faceMat, eyeClassifier.current);
+      video.pause();
 
-        let isLookingAtCamera = false;
-        
-        // 1. Must detect 2 eyes
-        if (eyes.length === 2) {
-            const [eye1, eye2] = eyes.sort((a: Rect, b: Rect) => a.x - b.x); // Sort eyes by x position
-
-            // Sensitivity adjustments (higher sensitivity = stricter thresholds)
-            const yAlignThreshold = eye1.height * (0.5 - sensitivity * 0.4); // Allow less vertical deviation
-            const sizeRatioThreshold = 1.0 - (0.4 - sensitivity * 0.35); // Eyes must be closer in size
-            const horizontalCenterThreshold = mainFaceRect.width * (0.2 - sensitivity * 0.18); // Eyes must be more centered
-
-            // 2. Eyes should be horizontally aligned
-            const yDiff = Math.abs((eye1.y + eye1.height / 2) - (eye2.y + eye2.height / 2));
-            const isYAligned = yDiff < yAlignThreshold;
-
-            // 3. Eyes should be of similar size
-            const eye1Area = eye1.width * eye1.height;
-            const eye2Area = eye2.width * eye2.height;
-            const sizeRatio = Math.min(eye1Area, eye2Area) / Math.max(eye1Area, eye2Area);
-            const isSizeSimilar = sizeRatio > sizeRatioThreshold;
-
-            // 4. Eyes should be horizontally centered within the face
-            const eyesCenterX = mainFaceRect.x + eye1.x + (eye2.x + eye2.width - eye1.x) / 2;
-            const faceCenterX = mainFaceRect.x + mainFaceRect.width / 2;
-            const horizontalDiff = Math.abs(eyesCenterX - faceCenterX);
-            const isHorizontallyCentered = horizontalDiff < horizontalCenterThreshold;
-            
-            console.log(`Gaze check: yDiff=${yDiff.toFixed(2)}/${yAlignThreshold.toFixed(2)}, sizeRatio=${sizeRatio.toFixed(2)}/${sizeRatioThreshold.toFixed(2)}, hDiff=${horizontalDiff.toFixed(2)}/${horizontalCenterThreshold.toFixed(2)}`);
-
-            if (isYAligned && isSizeSimilar && isHorizontallyCentered) {
-                isLookingAtCamera = true;
-            }
+      for (let time = 0; time <= duration; time += interval) {
+        if (canceledRef.current || runIdRef.current !== runId) {
+          setStatus(AnalysisStatus.Canceled);
+          return;
         }
 
-        const cooldown = 1.5; // seconds
-        if (isLookingAtCamera && video.currentTime > lastCaptureTimeRef.current + cooldown) {
-          console.log(`Camera gaze detected at ${video.currentTime.toFixed(2)}s`);
-          lastCaptureTimeRef.current = video.currentTime;
-          
-          const canvas = canvasRef.current;
-          if(canvas) {
-              canvas.width = video.videoWidth;
-              canvas.height = video.videoHeight;
-              const ctx = canvas.getContext('2d');
-              if (ctx) {
-                  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                  const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-                  onNewScreenshot({
-                      id: `ss-${Date.now()}`,
-                      dataUrl: dataUrl,
-                      timestamp: video.currentTime,
-                  });
-              }
+        await seekTo(video, time);
+
+        if (canceledRef.current || runIdRef.current !== runId) {
+          setStatus(AnalysisStatus.Canceled);
+          return;
+        }
+
+        const result = landmarker.detectForVideo(video, Math.round(time * 1000));
+        const hasFace = (result.faceLandmarks?.length ?? 0) > 0;
+        const headPose = getHeadPose(result.facialTransformationMatrixes?.[0]);
+        const gazeInput: GazeScoreInput = {
+          hasFace,
+          eyeLookOutLeft: getBlendshapeScore(result, 'eyeLookOutLeft'),
+          eyeLookOutRight: getBlendshapeScore(result, 'eyeLookOutRight'),
+          eyeLookInLeft: getBlendshapeScore(result, 'eyeLookInLeft'),
+          eyeLookInRight: getBlendshapeScore(result, 'eyeLookInRight'),
+          eyeLookUpLeft: getBlendshapeScore(result, 'eyeLookUpLeft'),
+          eyeLookUpRight: getBlendshapeScore(result, 'eyeLookUpRight'),
+          eyeLookDownLeft: getBlendshapeScore(result, 'eyeLookDownLeft'),
+          eyeLookDownRight: getBlendshapeScore(result, 'eyeLookDownRight'),
+          headYaw: headPose.yaw,
+          headPitch: headPose.pitch,
+          headRoll: headPose.roll,
+        };
+        const score = scoreGaze(gazeInput, sensitivity);
+
+        if (score.isCandidate) {
+          const latest = latestCandidateRef.current;
+          const shouldReplace =
+            latest && Math.abs(time - latest.timestamp) <= duplicateWindowSeconds && score.score > latest.score;
+          const shouldAdd = !latest || Math.abs(time - latest.timestamp) > duplicateWindowSeconds;
+
+          if (shouldReplace || shouldAdd) {
+            const screenshot: Screenshot = {
+              id: shouldReplace && latest ? latest.id : `ss-${Math.round(time * 1000)}`,
+              dataUrl: captureFrame(video, canvas),
+              timestamp: time,
+              score: score.score,
+              selected: shouldAdd,
+            };
+            latestCandidateRef.current = screenshot;
+            onCandidate(screenshot);
           }
         }
-        faceMat.delete();
+
+        setProgress(Math.min(100, (time / duration) * 100));
+        await new Promise((resolve) => window.setTimeout(resolve, 0));
       }
-    } catch (error) {
-      console.error("Error in OpenCV detection:", error);
-    } finally {
-      srcMat.delete();
-    }
-    
-    requestRef.current = requestAnimationFrame(detectGaze);
-  }, [videoRef, sensitivity, onNewScreenshot]);
 
-  const startAnalysis = useCallback(() => {
-    const video = videoRef.current;
-    if (!video) {
-      console.error("No video element");
-      return;
+      setProgress(100);
+      setStatus(AnalysisStatus.Done);
+    } catch {
+      setStatus(AnalysisStatus.Error);
     }
-    if (!faceClassifier.current || !eyeClassifier.current) {
-      console.log("Classifiers not ready, retrying in 500ms...");
-      setTimeout(() => startAnalysis(), 500);
-      return;
-    }
-    
-    reset();
-    setStatus(AnalysisStatus.Processing);
-    
-    const waitForVideo = () => {
-      if (video.readyState >= 2) {
-        video.currentTime = 0;
-        video.play().then(() => {
-          if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
-          progressIntervalRef.current = setInterval(() => {
-            if (video && !video.paused && !video.ended) {
-              setProgress((video.currentTime / video.duration) * 100);
-            } else if (video && video.ended) {
-               if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
-            }
-          }, 100);
-          
-          requestRef.current = requestAnimationFrame(detectGaze);
-        }).catch((e: Error) => {
-          console.error("Video play failed:", e);
-          setStatus(AnalysisStatus.Error);
-        });
-      } else {
-        setTimeout(waitForVideo, 100);
-      }
-    };
-    
-    waitForVideo();
-  }, [reset, detectGaze, videoRef]);
+  }, [onCandidate, scanMode, sensitivity, videoRef]);
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (requestRef.current != null) cancelAnimationFrame(requestRef.current);
-      if (progressIntervalRef.current != null) clearInterval(progressIntervalRef.current);
-    };
-  }, []);
-
-  return { status, progress, startAnalysis, reset };
+  return {
+    status,
+    progress,
+    startAnalysis,
+    cancelAnalysis,
+    reset,
+  };
 };

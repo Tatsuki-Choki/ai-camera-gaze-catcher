@@ -1,14 +1,18 @@
 import React, { useState } from 'react';
 import type { Screenshot } from '../types';
-import { DownloadIcon } from './icons/DownloadIcon';
+import { getScoreLabel } from '../services/scoreLabel';
 import { CopyIcon } from './icons/CopyIcon';
+import { DownloadIcon } from './icons/DownloadIcon';
 import { ExpandIcon } from './icons/ExpandIcon';
 
 interface ScreenshotCardProps {
   screenshot: Screenshot;
-  onExpand: (screenshot: Screenshot) => void;
-  onCopySuccess?: () => void;
-  onCopyError?: () => void;
+  compact?: boolean;
+  onPreview: (screenshot: Screenshot) => void;
+  onSeekTo: (timestamp: number) => void;
+  onToggleSelected: (id: string) => void;
+  onCopySuccess: () => void;
+  onCopyError: () => void;
 }
 
 const formatTimestamp = (seconds: number): string => {
@@ -17,150 +21,117 @@ const formatTimestamp = (seconds: number): string => {
   return `${mins}:${secs}`;
 };
 
-export const ScreenshotCard: React.FC<ScreenshotCardProps> = ({ screenshot, onExpand, onCopySuccess, onCopyError }) => {
-  const [copyStatus, setCopyStatus] = useState<'idle' | 'copying' | 'success' | 'error'>('idle');
-  const timestampFormatted = formatTimestamp(screenshot.timestamp);
-  const fileName = `スクリーンショット_${timestampFormatted.replace(':', '-')}.jpg`;
+const dataUrlToBlob = async (dataUrl: string) => {
+  const response = await fetch(dataUrl);
+  return response.blob();
+};
 
-  const copyToClipboard = async () => {
+const copyImage = async (dataUrl: string) => {
+  if (!navigator.clipboard || !window.ClipboardItem) {
+    throw new Error('Clipboard API is not available.');
+  }
+
+  const blob = await dataUrlToBlob(dataUrl);
+  await navigator.clipboard.write([
+    new ClipboardItem({ [blob.type || 'image/jpeg']: blob }),
+  ]);
+};
+
+export const ScreenshotCard: React.FC<ScreenshotCardProps> = ({
+  screenshot,
+  compact = false,
+  onPreview,
+  onSeekTo,
+  onToggleSelected,
+  onCopySuccess,
+  onCopyError,
+}) => {
+  const [copying, setCopying] = useState(false);
+  const timestamp = formatTimestamp(screenshot.timestamp);
+  const score = Math.round(screenshot.score * 100);
+  const scoreLabel = getScoreLabel(screenshot.score);
+  const fileName = `camera-gaze_${timestamp.replace(':', '-')}_${score}.jpg`;
+  const toneClass = {
+    strong: 'bg-emerald-100 text-emerald-700',
+    good: 'bg-blue-100 text-blue-700',
+    check: 'bg-amber-100 text-amber-700',
+  }[scoreLabel.tone];
+
+  const handleCopy = async () => {
     try {
-      setCopyStatus('copying');
-      
-      // Method 1: Try modern Clipboard API with blob
-      if (navigator.clipboard && window.ClipboardItem) {
-        try {
-          // Convert data URL to blob
-          const response = await fetch(screenshot.dataUrl);
-          const blob = await response.blob();
-          
-          // Create PNG blob if needed
-          const pngBlob = blob.type === 'image/png' ? blob : await convertToPNG(blob);
-          
-          await navigator.clipboard.write([
-            new ClipboardItem({
-              'image/png': pngBlob
-            })
-          ]);
-          
-          setCopyStatus('success');
-          if (onCopySuccess) {
-            onCopySuccess();
-          }
-          setTimeout(() => setCopyStatus('idle'), 2000);
-          return;
-        } catch (clipboardError) {
-          console.warn('ClipboardItem method failed:', clipboardError);
-          // Fall through to alternative method
-        }
-      }
-      
-      // Method 2: Create a canvas and copy as image
-      const img = new Image();
-      img.onload = async () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.drawImage(img, 0, 0);
-          
-          canvas.toBlob(async (blob) => {
-            if (blob) {
-              try {
-                await navigator.clipboard.write([
-                  new ClipboardItem({ 'image/png': blob })
-                ]);
-                setCopyStatus('success');
-                if (onCopySuccess) {
-                  onCopySuccess();
-                }
-              } catch (err) {
-                throw err;
-              }
-            }
-          }, 'image/png');
-        }
-      };
-      img.onerror = () => {
-        throw new Error('Failed to load image');
-      };
-      img.src = screenshot.dataUrl;
-      
-      setTimeout(() => setCopyStatus('idle'), 2000);
-    } catch (err) {
-      console.error('Failed to copy image:', err);
-      setCopyStatus('error');
-      if (onCopyError) {
-        onCopyError();
-      }
-      setTimeout(() => setCopyStatus('idle'), 2000);
+      setCopying(true);
+      await copyImage(screenshot.dataUrl);
+      onCopySuccess();
+    } catch {
+      onCopyError();
+    } finally {
+      setCopying(false);
     }
-  };
-  
-  // Helper function to convert blob to PNG
-  const convertToPNG = (blob: Blob): Promise<Blob> => {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        if (ctx) {
-          ctx.drawImage(img, 0, 0);
-          canvas.toBlob((pngBlob) => {
-            if (pngBlob) {
-              resolve(pngBlob);
-            } else {
-              reject(new Error('Failed to convert to PNG'));
-            }
-          }, 'image/png');
-        } else {
-          reject(new Error('Failed to get canvas context'));
-        }
-      };
-      img.onerror = () => reject(new Error('Failed to load image'));
-      img.src = URL.createObjectURL(blob);
-    });
   };
 
   return (
-    <div className="group relative bg-white rounded-lg overflow-hidden transition-all hover:shadow-xl cursor-pointer border border-gray-200">
-      <img 
-        src={screenshot.dataUrl} 
-        alt={`Screenshot at ${timestampFormatted}`} 
-        className="w-full h-auto aspect-video object-cover" 
-        onClick={() => onExpand(screenshot)}
-      />
-      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity">
-        <div className="flex items-center justify-between">
-          <span className="text-xs text-white font-medium">
-            {timestampFormatted}
-          </span>
-          <div className="flex gap-1">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                copyToClipboard();
-              }}
-              disabled={copyStatus === 'copying'}
-              className="p-2 rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 transition-all disabled:opacity-50"
-              aria-label="コピー"
-            >
-              <CopyIcon className="w-4 h-4" />
-            </button>
-            <a
-              href={screenshot.dataUrl}
-              download={fileName}
-              onClick={(e) => e.stopPropagation()}
-              className="p-2 rounded-full bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 transition-all"
-              aria-label="ダウンード"
-            >
-              <DownloadIcon className="w-4 h-4" />
-            </a>
-          </div>
+    <article
+      className={`group shrink-0 overflow-hidden rounded-3xl border bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-slate-200/70 ${
+        screenshot.selected ? 'border-blue-500 ring-4 ring-blue-100' : 'border-white'
+      } ${compact ? 'w-64' : ''}`}
+    >
+      <button
+        type="button"
+        onClick={() => onSeekTo(screenshot.timestamp)}
+        className="relative block w-full bg-slate-100 text-left"
+        aria-label={`${timestamp} に移動`}
+      >
+        <img
+          src={screenshot.dataUrl}
+          alt={`${timestamp} の候補`}
+          className="aspect-video w-full object-cover"
+        />
+        <div className="absolute left-2 top-2 rounded-xl bg-white/90 px-2 py-1 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur">
+          {timestamp}
+        </div>
+        <div className={`absolute right-2 top-2 rounded-xl px-2 py-1 text-xs font-semibold ${toneClass}`}>
+          {scoreLabel.label} {score}
+        </div>
+      </button>
+
+      <div className="flex items-center justify-between gap-2 p-3">
+        <label className="flex min-w-0 items-center gap-2 text-sm font-semibold text-slate-700">
+          <input
+            type="checkbox"
+            checked={screenshot.selected}
+            onChange={() => onToggleSelected(screenshot.id)}
+            className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600"
+          />
+          <span className="truncate">{screenshot.selected ? '選択中' : '候補'}</span>
+        </label>
+        <div className="flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => onPreview(screenshot)}
+            className="rounded-xl p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-950"
+            aria-label="拡大表示"
+          >
+            <ExpandIcon className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={handleCopy}
+            disabled={copying}
+            className="rounded-xl p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-950 disabled:opacity-50"
+            aria-label="コピー"
+          >
+            <CopyIcon className="h-4 w-4" />
+          </button>
+          <a
+            href={screenshot.dataUrl}
+            download={fileName}
+            className="rounded-xl p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-950"
+            aria-label="ダウンロード"
+          >
+            <DownloadIcon className="h-4 w-4" />
+          </a>
         </div>
       </div>
-    </div>
+    </article>
   );
 };

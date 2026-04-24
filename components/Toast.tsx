@@ -21,7 +21,9 @@ export const Toast: React.FC<ToastProps> = ({ message, isVisible, onClose, type 
 
   return (
     <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 animate-slide-up">
-      <div className="bg-on-surface text-surface px-4 py-3 rounded-full shadow-elevation-3 flex items-center gap-2 min-w-[200px]">
+      <div className={`flex min-w-[220px] items-center gap-2 rounded-full px-4 py-3 text-white shadow-lg ${
+        type === 'success' ? 'bg-blue-600' : 'bg-red-600'
+      }`}>
         {type === 'success' ? (
           <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />

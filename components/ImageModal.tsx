@@ -36,7 +36,7 @@ export const ImageModal: React.FC<ImageModalProps> = ({ screenshot, isOpen, onCl
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 animate-fade-in"
       onClick={onClose}
     >
       <div 
@@ -44,12 +44,12 @@ export const ImageModal: React.FC<ImageModalProps> = ({ screenshot, isOpen, onCl
         onClick={(e) => e.stopPropagation()}
       >
         <div className="absolute top-4 right-4 z-10 flex items-center gap-3">
-          <span className="text-sm text-white bg-black/40 backdrop-blur-sm px-3 py-1.5 rounded-full">
-            {formatTimestamp(screenshot.timestamp)}
+          <span className="text-sm text-slate-700 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full">
+            {formatTimestamp(screenshot.timestamp)} / score {Math.round(screenshot.score * 100)}
           </span>
           <button
             onClick={onClose}
-            className="bg-black/40 backdrop-blur-sm text-white rounded-full p-2 hover:bg-black/60 transition-all"
+            className="bg-white/90 backdrop-blur-sm text-slate-700 rounded-full p-2 hover:bg-white transition-all"
             aria-label="閉じる"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -59,8 +59,8 @@ export const ImageModal: React.FC<ImageModalProps> = ({ screenshot, isOpen, onCl
         </div>
         <img 
           src={screenshot.dataUrl} 
-          alt={`Screenshot at ${formatTimestamp(screenshot.timestamp)}`}
-          className="max-w-full max-h-[90vh] object-contain rounded-xl"
+          alt={`${formatTimestamp(screenshot.timestamp)} の候補`}
+          className="max-w-full max-h-[90vh] object-contain rounded-lg"
         />
       </div>
     </div>

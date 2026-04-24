@@ -1,8 +1,9 @@
-
 export interface Screenshot {
   id: string;
   dataUrl: string;
   timestamp: number;
+  score: number;
+  selected: boolean;
 }
 
 export enum AnalysisStatus {
@@ -11,11 +12,33 @@ export enum AnalysisStatus {
   Processing = 'processing',
   Done = 'done',
   Error = 'error',
+  Canceled = 'canceled',
 }
 
-export interface Rect {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
+export type ScanMode = 'fast' | 'standard' | 'precise';
+
+export interface ScanModeOption {
+  id: ScanMode;
+  label: string;
+  intervalSeconds: number;
+}
+
+export interface GazeScoreInput {
+  hasFace: boolean;
+  eyeLookOutLeft: number;
+  eyeLookOutRight: number;
+  eyeLookInLeft: number;
+  eyeLookInRight: number;
+  eyeLookUpLeft: number;
+  eyeLookUpRight: number;
+  eyeLookDownLeft: number;
+  eyeLookDownRight: number;
+  headYaw: number;
+  headPitch: number;
+  headRoll: number;
+}
+
+export interface GazeScoreResult {
+  score: number;
+  isCandidate: boolean;
 }
