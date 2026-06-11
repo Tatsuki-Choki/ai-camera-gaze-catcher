@@ -67,6 +67,7 @@ export class FramePipeline {
   private readonly sharpnessContext: OffscreenCanvasRenderingContext2D | CanvasRenderingContext2D;
   private readonly sharpnessHeight: number;
   private snapshotCanvas: AnyCanvas | null = null;
+  private thumbCanvas: AnyCanvas | null = null;
   private pendingPoints: ScorePoint[] = [];
   private finalizeChain: Promise<void> = Promise.resolve();
   private finalizeError: Error | null = null;
@@ -131,9 +132,10 @@ export class FramePipeline {
     this.finalizeChain = this.finalizeChain.then(async () => {
       const fullBlob = await canvasToBlob(canvas, mime, 0.92);
       const thumbHeight = Math.max(1, Math.round((THUMB_WIDTH * this.height) / this.width));
-      const thumbCanvas = createCanvas(THUMB_WIDTH, thumbHeight);
-      get2dContext(thumbCanvas).drawImage(canvas, 0, 0, THUMB_WIDTH, thumbHeight);
-      const thumbBlob = await canvasToBlob(thumbCanvas, 'image/jpeg', 0.8);
+      // finalizeChainが直列化しているのでサムネイル用canvasは1つを使い回せる
+      this.thumbCanvas ??= createCanvas(THUMB_WIDTH, thumbHeight);
+      get2dContext(this.thumbCanvas).drawImage(canvas, 0, 0, THUMB_WIDTH, thumbHeight);
+      const thumbBlob = await canvasToBlob(this.thumbCanvas, 'image/jpeg', 0.8);
 
       this.emit({
         type: 'candidate',

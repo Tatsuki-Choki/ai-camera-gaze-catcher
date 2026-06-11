@@ -1,17 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import type { Screenshot } from '../types';
+import { formatTimestamp } from '../services/formatTime';
 
 interface ImageModalProps {
   screenshot: Screenshot | null;
   isOpen: boolean;
   onClose: () => void;
 }
-
-const formatTimestamp = (seconds: number): string => {
-  const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
-  const secs = Math.floor(seconds % 60).toString().padStart(2, '0');
-  return `${mins}:${secs}`;
-};
 
 export const ImageModal: React.FC<ImageModalProps> = ({ screenshot, isOpen, onClose }) => {
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);

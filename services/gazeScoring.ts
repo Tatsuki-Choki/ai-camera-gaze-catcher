@@ -46,7 +46,7 @@ export const scoreGaze = (
   const threshold = candidateThreshold(sensitivity);
 
   if (!input.hasFace) {
-    return { score: 0, isCandidate: false, threshold };
+    return { score: 0, isCandidate: false };
   }
 
   const eyeTolerance = 0.38 - normalizedSensitivity * 0.2;
@@ -59,6 +59,5 @@ export const scoreGaze = (
   return {
     score,
     isCandidate: score >= threshold,
-    threshold,
   };
 };

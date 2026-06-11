@@ -46,3 +46,10 @@ export const scanIntervals: Record<ScanMode, number> = {
 export const denseIntervalFor = (scanMode: ScanMode): number => (
   Math.max(scanIntervals[scanMode] / 4, 1 / 30)
 );
+
+/** WebCodecsエンジン（Worker + VideoDecoder）が使える形式・環境か */
+export const canUseWebCodecs = (file: File): boolean => (
+  typeof VideoDecoder !== 'undefined' &&
+  typeof Worker !== 'undefined' &&
+  (file.type === 'video/mp4' || file.type === 'video/quicktime')
+);

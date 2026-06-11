@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { Screenshot } from '../types';
+import { formatTimestamp } from '../services/formatTime';
 import { getScoreLabel } from '../services/scoreLabel';
 import { CopyIcon } from './icons/CopyIcon';
 import { DownloadIcon } from './icons/DownloadIcon';
@@ -13,12 +14,6 @@ interface ScreenshotCardProps {
   onCopySuccess: () => void;
   onCopyError: () => void;
 }
-
-const formatTimestamp = (seconds: number): string => {
-  const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
-  const secs = Math.floor(seconds % 60).toString().padStart(2, '0');
-  return `${mins}:${secs}`;
-};
 
 // Chromeのクリップボードはimage/pngのみ受け付けるため、PNGへ変換してから書き込む
 const copyImage = async (blob: Blob) => {

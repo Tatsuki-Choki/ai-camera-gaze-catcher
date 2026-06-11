@@ -1,5 +1,6 @@
 import { createFaceLandmarker } from '../mediaPipeService';
 import { FramePipeline } from './framePipeline';
+import { createProgressReporter } from './progressReporter';
 import {
   denseIntervalFor,
   scanIntervals,
@@ -7,8 +8,16 @@ import {
   type WorkerResponse,
 } from './messages';
 
-const PROGRESS_INTERVAL_MS = 250;
 const SEEK_TIMEOUT_MS = 3000;
+
+// setTimeout(0)は4ms前後に切り上げられるため、MessageChannelで即時に制御を返す
+const yieldToUi = (): Promise<void> => (
+  new Promise((resolve) => {
+    const channel = new MessageChannel();
+    channel.port1.onmessage = () => resolve();
+    channel.port2.postMessage(null);
+  })
+);
 
 const waitForMetadata = (video: HTMLVideoElement): Promise<void> => (
   new Promise((resolve, reject) => {
@@ -97,25 +106,7 @@ export const runSeekAnalysis = (
       const pipeline = new FramePipeline(config, width, height, onEvent);
 
       let lastDetectMs = -1;
-      const startedAt = performance.now();
-      let lastProgressAt = 0;
-
-      const reportProgress = (processedTime: number, force = false) => {
-        const now = performance.now();
-        if (!force && now - lastProgressAt < PROGRESS_INTERVAL_MS) {
-          return;
-        }
-        lastProgressAt = now;
-        const wallSeconds = (now - startedAt) / 1000;
-        const rate = processedTime / Math.max(wallSeconds, 0.001);
-        onEvent({
-          type: 'progress',
-          progress: {
-            percent: Math.min(100, (processedTime / duration) * 100),
-            etaSeconds: rate > 0.01 ? Math.max(0, (duration - processedTime) / rate) : null,
-          },
-        });
-      };
+      const reportProgress = createProgressReporter(duration, onEvent);
 
       let time = 0;
       while (time <= duration) {
@@ -140,7 +131,7 @@ export const runSeekAnalysis = (
         reportProgress(time);
         time += pipeline.isHot ? denseInterval : baseInterval;
         // UIを固めないために毎フレーム制御を返す
-        await new Promise((resolve) => window.setTimeout(resolve, 0));
+        await yieldToUi();
       }
 
       await pipeline.finish();

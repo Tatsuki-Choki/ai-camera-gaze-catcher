@@ -6,14 +6,8 @@ import { ScoreTimeline } from './components/ScoreTimeline';
 import { VideoWorkspace } from './components/VideoWorkspace';
 import { WorkspaceSidebar } from './components/WorkspaceSidebar';
 import { useAnalysisEngine } from './hooks/useAnalysisEngine';
-import { candidateThreshold } from './services/gazeScoring';
+import { formatTimestamp } from './services/formatTime';
 import type { ExportFormat, ScanMode, Screenshot } from './types';
-
-const formatTimestampForFile = (seconds: number): string => {
-  const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
-  const secs = Math.floor(seconds % 60).toString().padStart(2, '0');
-  return `${mins}-${secs}`;
-};
 
 export default function App(): React.ReactNode {
   const [videoFile, setVideoFile] = useState<File | null>(null);
@@ -48,6 +42,7 @@ export default function App(): React.ReactNode {
     engineKind,
     errorMessage,
     timeline,
+    threshold,
     startAnalysis,
     cancelAnalysis,
     reset,
@@ -132,7 +127,7 @@ export default function App(): React.ReactNode {
 
       selected.forEach((screenshot, index) => {
         const extension = screenshot.fullBlob.type === 'image/png' ? 'png' : 'jpg';
-        const name = `${String(index + 1).padStart(2, '0')}_${formatTimestampForFile(screenshot.time)}_score-${Math.round(screenshot.score * 100)}.${extension}`;
+        const name = `${String(index + 1).padStart(2, '0')}_${formatTimestamp(screenshot.time, '-')}_score-${Math.round(screenshot.score * 100)}.${extension}`;
         zip.file(name, screenshot.fullBlob);
       });
 
@@ -217,7 +212,7 @@ export default function App(): React.ReactNode {
             candidates={screenshots}
             duration={duration}
             currentTime={currentTime}
-            threshold={candidateThreshold(sensitivity)}
+            threshold={threshold}
             onSeek={handleSeekTo}
           />
         )}

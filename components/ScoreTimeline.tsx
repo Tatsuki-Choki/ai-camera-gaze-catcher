@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import type { ScorePoint, Screenshot } from '../types';
+import { formatTimestamp } from '../services/formatTime';
 
 interface ScoreTimelineProps {
   points: ScorePoint[];
@@ -9,12 +10,6 @@ interface ScoreTimelineProps {
   threshold: number;
   onSeek: (time: number) => void;
 }
-
-const formatTime = (seconds: number): string => {
-  const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
-  const secs = Math.floor(seconds % 60).toString().padStart(2, '0');
-  return `${mins}:${secs}`;
-};
 
 export const ScoreTimeline: React.FC<ScoreTimelineProps> = ({
   points,
@@ -26,6 +21,7 @@ export const ScoreTimeline: React.FC<ScoreTimelineProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const playheadCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const [width, setWidth] = useState(0);
   const height = 96;
 
@@ -121,16 +117,32 @@ export const ScoreTimeline: React.FC<ScoreTimelineProps> = ({
       ctx.lineWidth = 1.5;
       ctx.stroke();
     }
+  }, [points, candidates, duration, threshold, width]);
 
-    // 再生位置
-    const playheadX = xOf(currentTime);
+  // 再生位置は別レイヤーに描き、timeupdateごとの曲線全体の再描画を避ける
+  useEffect(() => {
+    const canvas = playheadCanvasRef.current;
+    if (!canvas || width === 0 || duration <= 0) {
+      return;
+    }
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = width * dpr;
+    canvas.height = height * dpr;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      return;
+    }
+    ctx.scale(dpr, dpr);
+    ctx.clearRect(0, 0, width, height);
+
+    const playheadX = (currentTime / duration) * width;
     ctx.strokeStyle = '#0f172a';
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(playheadX, 0);
     ctx.lineTo(playheadX, height);
     ctx.stroke();
-  }, [points, candidates, duration, currentTime, threshold, width]);
+  }, [currentTime, duration, width]);
 
   const seekFromPointer = useCallback((clientX: number) => {
     const container = containerRef.current;
@@ -164,7 +176,7 @@ export const ScoreTimeline: React.FC<ScoreTimelineProps> = ({
       <div className="mb-2 flex items-center justify-between text-xs text-slate-500">
         <span className="font-medium text-slate-700">視線スコアタイムライン</span>
         <span>
-          {formatTime(currentTime)} / {formatTime(duration)}
+          {formatTimestamp(currentTime)} / {formatTimestamp(duration)}
         </span>
       </div>
       <div
@@ -174,13 +186,18 @@ export const ScoreTimeline: React.FC<ScoreTimelineProps> = ({
         aria-valuemin={0}
         aria-valuemax={Math.round(duration)}
         aria-valuenow={Math.round(currentTime)}
-        aria-valuetext={formatTime(currentTime)}
+        aria-valuetext={formatTimestamp(currentTime)}
         tabIndex={0}
-        className="cursor-pointer rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+        className="relative cursor-pointer rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
         onClick={(event) => seekFromPointer(event.clientX)}
         onKeyDown={handleKeyDown}
       >
         <canvas ref={canvasRef} style={{ width: '100%', height }} />
+        <canvas
+          ref={playheadCanvasRef}
+          className="pointer-events-none absolute inset-0"
+          style={{ width: '100%', height }}
+        />
       </div>
     </div>
   );

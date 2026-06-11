@@ -7,13 +7,15 @@ import {
   type ScorePoint,
   type Screenshot,
 } from '../types';
-import type {
-  CandidatePayload,
-  EngineConfig,
-  ProgressInfo,
-  WorkerRequest,
-  WorkerResponse,
+import {
+  canUseWebCodecs,
+  type CandidatePayload,
+  type EngineConfig,
+  type ProgressInfo,
+  type WorkerRequest,
+  type WorkerResponse,
 } from '../services/engine/messages';
+import { candidateThreshold } from '../services/gazeScoring';
 import { runSeekAnalysis, type RunningAnalysis } from '../services/engine/seekEngine';
 
 interface UseAnalysisEngineOptions {
@@ -22,12 +24,6 @@ interface UseAnalysisEngineOptions {
   exportFormat: ExportFormat;
   onCandidate: (screenshot: Screenshot, replacesId: string | null) => void;
 }
-
-const canUseWebCodecs = (file: File): boolean => (
-  typeof VideoDecoder !== 'undefined' &&
-  typeof Worker !== 'undefined' &&
-  (file.type === 'video/mp4' || file.type === 'video/quicktime')
-);
 
 const toScreenshot = (candidate: CandidatePayload): Screenshot => ({
   id: candidate.id,
@@ -205,6 +201,7 @@ export const useAnalysisEngine = ({
     engineKind,
     errorMessage,
     timeline,
+    threshold: candidateThreshold(sensitivity),
     startAnalysis,
     cancelAnalysis,
     reset,

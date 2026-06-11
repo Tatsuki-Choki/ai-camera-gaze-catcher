@@ -57,7 +57,11 @@ interface WorkspaceSidebarProps {
   onDownloadSelected: () => void;
 }
 
-interface SettingsPanelProps extends WorkspaceSidebarProps {
+// SettingsPanelは候補数・エンジン種別・エラーは扱わない
+interface SettingsPanelProps extends Omit<
+  WorkspaceSidebarProps,
+  'candidateCount' | 'engineKind' | 'errorMessage'
+> {
   idPrefix: string;
 }
 

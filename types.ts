@@ -56,5 +56,4 @@ export interface GazeFrameFeatures {
 export interface GazeScoreResult {
   score: number;
   isCandidate: boolean;
-  threshold: number;
 }

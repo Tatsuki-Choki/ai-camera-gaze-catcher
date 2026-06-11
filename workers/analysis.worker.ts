@@ -2,6 +2,7 @@ import type { FaceLandmarker } from '@mediapipe/tasks-vision';
 import { createFaceLandmarker } from '../services/mediaPipeService';
 import { demuxMp4 } from '../services/engine/mp4Demuxer';
 import { FramePipeline } from '../services/engine/framePipeline';
+import { createProgressReporter } from '../services/engine/progressReporter';
 import {
   denseIntervalFor,
   scanIntervals,
@@ -16,7 +17,6 @@ const ctx = self as unknown as {
 };
 
 const MAX_DECODE_QUEUE = 20;
-const PROGRESS_INTERVAL_MS = 250;
 
 let canceled = false;
 
@@ -73,28 +73,9 @@ const run = async (file: File, config: EngineConfig): Promise<void> => {
   let processedTime = 0;
   let decodeError: Error | null = null;
 
-  const startedAt = performance.now();
-  let lastProgressAt = 0;
-
-  const reportProgress = (force = false) => {
-    const now = performance.now();
-    if (!force && now - lastProgressAt < PROGRESS_INTERVAL_MS) {
-      return;
-    }
-    lastProgressAt = now;
-    const wallSeconds = (now - startedAt) / 1000;
-    const rate = processedTime / Math.max(wallSeconds, 0.001);
-    const etaSeconds = rate > 0.01
-      ? Math.max(0, (durationSeconds - processedTime) / rate)
-      : null;
-    ctx.postMessage({
-      type: 'progress',
-      progress: {
-        percent: Math.min(100, (processedTime / durationSeconds) * 100),
-        etaSeconds,
-      },
-    });
-  };
+  const reportProgress = createProgressReporter(durationSeconds, (event) => {
+    ctx.postMessage(event);
+  });
 
   const processFrame = (frame: VideoFrame) => {
     try {
@@ -112,7 +93,7 @@ const run = async (file: File, config: EngineConfig): Promise<void> => {
         const result = landmarker.detectForVideo(frame, detectMs);
         pipeline.process(frame, time, result);
       }
-      reportProgress();
+      reportProgress(processedTime);
     } catch (error) {
       decodeError = error instanceof Error ? error : new Error('フレーム処理に失敗しました。');
     } finally {
@@ -152,8 +133,7 @@ const run = async (file: File, config: EngineConfig): Promise<void> => {
     }
 
     await pipeline.finish();
-    processedTime = durationSeconds;
-    reportProgress(true);
+    reportProgress(durationSeconds, true);
     ctx.postMessage({ type: 'done' });
   } catch (error) {
     ctx.postMessage({

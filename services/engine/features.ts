@@ -1,12 +1,10 @@
 import type { FaceLandmarkerResult, Matrix } from '@mediapipe/tasks-vision';
 import type { GazeFrameFeatures } from '../../types';
 
-const getBlendshapeScore = (
-  result: FaceLandmarkerResult,
-  categoryName: string,
-): number => {
+// 毎フレーム10項目を52件のリストからfindするのを避け、一度Map化して引く
+const getBlendshapeMap = (result: FaceLandmarkerResult): Map<string, number> => {
   const categories = result.faceBlendshapes[0]?.categories ?? [];
-  return categories.find((category) => category.categoryName === categoryName)?.score ?? 0;
+  return new Map(categories.map((category) => [category.categoryName, category.score]));
 };
 
 const getHeadPose = (matrix: Matrix | undefined) => {
@@ -25,19 +23,21 @@ const getHeadPose = (matrix: Matrix | undefined) => {
 export const extractGazeFeatures = (result: FaceLandmarkerResult): GazeFrameFeatures => {
   const hasFace = (result.faceLandmarks?.length ?? 0) > 0;
   const headPose = getHeadPose(result.facialTransformationMatrixes?.[0]);
+  const blendshapes = getBlendshapeMap(result);
+  const score = (name: string) => blendshapes.get(name) ?? 0;
 
   return {
     hasFace,
-    eyeLookOutLeft: getBlendshapeScore(result, 'eyeLookOutLeft'),
-    eyeLookOutRight: getBlendshapeScore(result, 'eyeLookOutRight'),
-    eyeLookInLeft: getBlendshapeScore(result, 'eyeLookInLeft'),
-    eyeLookInRight: getBlendshapeScore(result, 'eyeLookInRight'),
-    eyeLookUpLeft: getBlendshapeScore(result, 'eyeLookUpLeft'),
-    eyeLookUpRight: getBlendshapeScore(result, 'eyeLookUpRight'),
-    eyeLookDownLeft: getBlendshapeScore(result, 'eyeLookDownLeft'),
-    eyeLookDownRight: getBlendshapeScore(result, 'eyeLookDownRight'),
-    eyeBlinkLeft: getBlendshapeScore(result, 'eyeBlinkLeft'),
-    eyeBlinkRight: getBlendshapeScore(result, 'eyeBlinkRight'),
+    eyeLookOutLeft: score('eyeLookOutLeft'),
+    eyeLookOutRight: score('eyeLookOutRight'),
+    eyeLookInLeft: score('eyeLookInLeft'),
+    eyeLookInRight: score('eyeLookInRight'),
+    eyeLookUpLeft: score('eyeLookUpLeft'),
+    eyeLookUpRight: score('eyeLookUpRight'),
+    eyeLookDownLeft: score('eyeLookDownLeft'),
+    eyeLookDownRight: score('eyeLookDownRight'),
+    eyeBlinkLeft: score('eyeBlinkLeft'),
+    eyeBlinkRight: score('eyeBlinkRight'),
     headYaw: headPose.yaw,
     headPitch: headPose.pitch,
     headRoll: headPose.roll,
