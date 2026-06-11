@@ -20,20 +20,13 @@ export const Toast: React.FC<ToastProps> = ({ message, isVisible, onClose, type 
   if (!isVisible) return null;
 
   return (
-    <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 z-50 animate-slide-up">
-      <div className={`flex min-w-[220px] items-center gap-2 rounded-full px-4 py-3 text-white shadow-lg ${
-        type === 'success' ? 'bg-blue-600' : 'bg-red-600'
-      }`}>
-        {type === 'success' ? (
-          <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-          </svg>
-        ) : (
-          <svg className="w-5 h-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        )}
-        <span className="text-sm font-medium">{message}</span>
+    <div className="fixed left-1/2 top-5 z-50 -translate-x-1/2 animate-slide-up" role="status">
+      <div className="flex min-w-[220px] items-center gap-2.5 rounded-xl border border-line-strong bg-ink-800/95 px-4 py-3 shadow-[0_16px_48px_-12px_rgba(0,0,0,0.9)] backdrop-blur-md">
+        <span
+          aria-hidden="true"
+          className={`h-1.5 w-1.5 rounded-full ${type === 'success' ? 'bg-amber' : 'bg-rec'}`}
+        />
+        <span className="text-sm font-medium text-hi">{message}</span>
       </div>
     </div>
   );

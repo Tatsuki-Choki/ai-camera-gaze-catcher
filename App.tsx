@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import JSZip from 'jszip';
-import { AppShell } from './components/AppShell';
 import { CandidateGrid } from './components/CandidateGrid';
+import { ControlRail } from './components/ControlRail';
 import { ScoreTimeline } from './components/ScoreTimeline';
+import { SelectionBar } from './components/SelectionBar';
+import { TopBar } from './components/TopBar';
 import { VideoWorkspace } from './components/VideoWorkspace';
-import { WorkspaceSidebar } from './components/WorkspaceSidebar';
 import { useAnalysisEngine } from './hooks/useAnalysisEngine';
 import { formatTimestamp } from './services/formatTime';
 import type { ExportFormat, ScanMode, Screenshot } from './types';
@@ -169,65 +170,74 @@ export default function App(): React.ReactNode {
   }, [videoSrc]);
 
   return (
-    <AppShell
-      sidebar={(
-        <WorkspaceSidebar
-          hasVideo={Boolean(videoSrc)}
-          candidateCount={screenshots.length}
-          selectedCount={selectedCount}
-          status={status}
-          progressPercent={progress.percent}
-          etaSeconds={progress.etaSeconds}
-          engineKind={engineKind}
-          errorMessage={errorMessage}
-          sensitivity={sensitivity}
-          scanMode={scanMode}
-          exportFormat={exportFormat}
-          zipping={zipping}
-          onSensitivityChange={setSensitivity}
-          onScanModeChange={setScanMode}
-          onExportFormatChange={setExportFormat}
-          onStartAnalysis={handleStartAnalysis}
-          onCancelAnalysis={cancelAnalysis}
-          onNewVideo={handleNewVideo}
-          onDownloadSelected={handleDownloadSelected}
-        />
-      )}
-    >
-      <div className="mx-auto flex max-w-[1500px] flex-col gap-5 p-4 sm:p-6">
+    <div className="grain min-h-screen">
+      <TopBar
+        status={status}
+        engineKind={engineKind}
+        candidateCount={screenshots.length}
+        selectedCount={selectedCount}
+        hasVideo={Boolean(videoSrc)}
+        onNewVideo={handleNewVideo}
+      />
+
+      <main className="mx-auto flex max-w-6xl flex-col gap-5 px-4 pb-32 pt-6 sm:px-6">
         <VideoWorkspace
           videoSrc={videoSrc}
           videoRef={videoRef}
           status={status}
           progressPercent={progress.percent}
-          engineKind={engineKind}
-          candidateCount={screenshots.length}
-          selectedCount={selectedCount}
           onVideoSelect={handleVideoSelect}
+          timeline={duration > 0 && timeline.length > 0 ? (
+            <ScoreTimeline
+              points={timeline}
+              candidates={screenshots}
+              duration={duration}
+              currentTime={currentTime}
+              threshold={threshold}
+              onSeek={handleSeekTo}
+            />
+          ) : null}
         />
 
-        {duration > 0 && (
-          <ScoreTimeline
-            points={timeline}
-            candidates={screenshots}
-            duration={duration}
-            currentTime={currentTime}
-            threshold={threshold}
-            onSeek={handleSeekTo}
+        {videoSrc && (
+          <ControlRail
+            hasVideo={Boolean(videoSrc)}
+            status={status}
+            progressPercent={progress.percent}
+            etaSeconds={progress.etaSeconds}
+            errorMessage={errorMessage}
+            sensitivity={sensitivity}
+            scanMode={scanMode}
+            exportFormat={exportFormat}
+            onSensitivityChange={setSensitivity}
+            onScanModeChange={setScanMode}
+            onExportFormatChange={setExportFormat}
+            onStartAnalysis={handleStartAnalysis}
+            onCancelAnalysis={cancelAnalysis}
           />
         )}
 
         <CandidateGrid
           screenshots={screenshots}
           selectedCount={selectedCount}
-          zipping={zipping}
           onSeekTo={handleSeekToCandidate}
           onToggleSelected={handleToggleSelected}
           onSelectAll={handleSelectAll}
-          onClearSelection={handleClearSelection}
-          onDownloadSelected={handleDownloadSelected}
         />
-      </div>
-    </AppShell>
+
+        {videoSrc && (
+          <p className="text-center text-[11px] leading-5 text-low">
+            解析はすべてブラウザ内で実行されます。動画ファイルがアップロードされることはありません。
+          </p>
+        )}
+      </main>
+
+      <SelectionBar
+        selectedCount={selectedCount}
+        zipping={zipping}
+        onClearSelection={handleClearSelection}
+        onDownloadSelected={handleDownloadSelected}
+      />
+    </div>
   );
 }

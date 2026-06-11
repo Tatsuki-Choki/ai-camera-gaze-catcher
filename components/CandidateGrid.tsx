@@ -9,23 +9,17 @@ type SortKey = 'time' | 'score';
 interface CandidateGridProps {
   screenshots: Screenshot[];
   selectedCount: number;
-  zipping: boolean;
   onSeekTo: (timestamp: number) => void;
   onToggleSelected: (id: string) => void;
   onSelectAll: () => void;
-  onClearSelection: () => void;
-  onDownloadSelected: () => void;
 }
 
 export const CandidateGrid: React.FC<CandidateGridProps> = ({
   screenshots,
   selectedCount,
-  zipping,
   onSeekTo,
   onToggleSelected,
   onSelectAll,
-  onClearSelection,
-  onDownloadSelected,
 }) => {
   const [sortKey, setSortKey] = useState<SortKey>('time');
   const [selectedScreenshot, setSelectedScreenshot] = useState<Screenshot | null>(null);
@@ -60,27 +54,36 @@ export const CandidateGrid: React.FC<CandidateGridProps> = ({
     setTimeout(() => setSelectedScreenshot(null), 200);
   };
 
+  if (screenshots.length === 0) {
+    return null;
+  }
+
   return (
-    <section className="rounded-[28px] border border-white bg-white/85 p-4 shadow-xl shadow-slate-200/60 backdrop-blur">
-      <div className="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-center">
+    <section aria-label="候補一覧">
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h2 className="text-base font-semibold text-slate-950">候補一覧</h2>
-          <p className="mt-1 text-sm text-slate-500">
-            {screenshots.length === 0
-              ? '解析するとカメラ目線の候補がここに並びます。'
-              : `${selectedCount} / ${screenshots.length} 件を選択中`}
+          <p className="font-tc text-[10px] uppercase tracking-[0.4em] text-amber">
+            Candidates
+          </p>
+          <h2 className="font-credit mt-1 text-xl font-bold tracking-wide text-hi">
+            候補 <span className="font-tc text-base text-mid">{screenshots.length}</span>
+          </h2>
+          <p className="mt-1 text-xs text-mid">
+            クリックで選択。選んだ候補は下のバーからまとめて保存できます。
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="grid grid-cols-2 rounded-2xl bg-slate-100 p-1" role="group" aria-label="並び順">
+        <div className="flex items-center gap-2">
+          <div role="group" aria-label="並び順" className="flex rounded-lg border border-line bg-ink-950 p-0.5">
             {([['time', '時刻順'], ['score', 'スコア順']] as const).map(([key, label]) => (
               <button
                 key={key}
                 type="button"
                 onClick={() => setSortKey(key)}
                 aria-pressed={sortKey === key}
-                className={`rounded-xl px-3 py-1.5 text-sm font-semibold transition ${
-                  sortKey === key ? 'bg-white text-slate-950 shadow-sm' : 'text-slate-500 hover:text-slate-950'
+                className={`rounded-md px-3 py-1.5 text-xs font-medium transition ${
+                  sortKey === key
+                    ? 'bg-ink-750 text-hi shadow-[inset_0_0_0_1px_var(--line-strong)]'
+                    : 'text-low hover:text-mid'
                 }`}
               >
                 {label}
@@ -90,50 +93,32 @@ export const CandidateGrid: React.FC<CandidateGridProps> = ({
           <button
             type="button"
             onClick={onSelectAll}
-            disabled={screenshots.length === 0}
-            className="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            disabled={selectedCount === screenshots.length}
+            className="rounded-lg border border-line px-3 py-1.5 text-xs font-medium text-mid transition hover:border-line-strong hover:text-hi disabled:cursor-not-allowed disabled:opacity-40"
           >
             全選択
-          </button>
-          <button
-            type="button"
-            onClick={onClearSelection}
-            disabled={selectedCount === 0}
-            className="rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            選択解除
-          </button>
-          <button
-            type="button"
-            onClick={onDownloadSelected}
-            disabled={zipping || selectedCount === 0}
-            className="rounded-2xl bg-blue-600 px-3 py-2 text-sm font-semibold text-white shadow-lg shadow-blue-600/20 transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {zipping ? 'ZIP作成中...' : '選択分を保存'}
           </button>
         </div>
       </div>
 
-      {screenshots.length === 0 ? (
-        <div className="flex min-h-36 items-center justify-center rounded-3xl border border-dashed border-slate-300 bg-slate-50/80 px-4 text-center text-sm text-slate-500">
-          候補はまだありません。動画を選んで「解析を開始」を押してください。
-        </div>
-      ) : (
-        <ul className="grid list-none grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {sorted.map((screenshot) => (
-            <li key={screenshot.id}>
-              <ScreenshotCard
-                screenshot={screenshot}
-                onPreview={handlePreview}
-                onSeekTo={onSeekTo}
-                onToggleSelected={onToggleSelected}
-                onCopySuccess={() => showToast('クリップボードにコピーしました')}
-                onCopyError={() => showToast('コピーに失敗しました。ブラウザの権限を確認してください。', 'error')}
-              />
-            </li>
-          ))}
-        </ul>
-      )}
+      <ul className="grid list-none grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {sorted.map((screenshot, index) => (
+          <li
+            key={screenshot.id}
+            className="animate-rise"
+            style={{ animationDelay: `${Math.min(index, 8) * 40}ms` }}
+          >
+            <ScreenshotCard
+              screenshot={screenshot}
+              onPreview={handlePreview}
+              onSeekTo={onSeekTo}
+              onToggleSelected={onToggleSelected}
+              onCopySuccess={() => showToast('クリップボードにコピーしました')}
+              onCopyError={() => showToast('コピーに失敗しました。ブラウザの権限を確認してください。', 'error')}
+            />
+          </li>
+        ))}
+      </ul>
 
       <ImageModal
         screenshot={selectedScreenshot}

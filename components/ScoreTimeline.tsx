@@ -66,7 +66,7 @@ export const ScoreTimeline: React.FC<ScoreTimelineProps> = ({
     }
 
     // 閾値ライン
-    ctx.strokeStyle = 'rgba(148, 163, 184, 0.6)';
+    ctx.strokeStyle = 'rgba(242, 239, 233, 0.18)';
     ctx.setLineDash([4, 4]);
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -91,7 +91,7 @@ export const ScoreTimeline: React.FC<ScoreTimelineProps> = ({
       }
     }
     if (started) {
-      ctx.strokeStyle = '#2563eb';
+      ctx.strokeStyle = '#e9a23b';
       ctx.lineWidth = 1.5;
       ctx.stroke();
 
@@ -99,8 +99,8 @@ export const ScoreTimeline: React.FC<ScoreTimelineProps> = ({
       ctx.lineTo(0, height);
       ctx.closePath();
       const gradient = ctx.createLinearGradient(0, 0, 0, height);
-      gradient.addColorStop(0, 'rgba(37, 99, 235, 0.25)');
-      gradient.addColorStop(1, 'rgba(37, 99, 235, 0.02)');
+      gradient.addColorStop(0, 'rgba(233, 162, 59, 0.28)');
+      gradient.addColorStop(1, 'rgba(233, 162, 59, 0.02)');
       ctx.fillStyle = gradient;
       ctx.fill();
     }
@@ -111,9 +111,9 @@ export const ScoreTimeline: React.FC<ScoreTimelineProps> = ({
       const y = yOf(candidate.score);
       ctx.beginPath();
       ctx.arc(x, y, 4, 0, Math.PI * 2);
-      ctx.fillStyle = candidate.selected ? '#2563eb' : '#ffffff';
+      ctx.fillStyle = candidate.selected ? '#e9a23b' : '#17171b';
       ctx.fill();
-      ctx.strokeStyle = '#2563eb';
+      ctx.strokeStyle = '#e9a23b';
       ctx.lineWidth = 1.5;
       ctx.stroke();
     }
@@ -136,7 +136,7 @@ export const ScoreTimeline: React.FC<ScoreTimelineProps> = ({
     ctx.clearRect(0, 0, width, height);
 
     const playheadX = (currentTime / duration) * width;
-    ctx.strokeStyle = '#0f172a';
+    ctx.strokeStyle = '#f2efe9';
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(playheadX, 0);
@@ -172,11 +172,14 @@ export const ScoreTimeline: React.FC<ScoreTimelineProps> = ({
   }
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-3">
-      <div className="mb-2 flex items-center justify-between text-xs text-slate-500">
-        <span className="font-medium text-slate-700">視線スコアタイムライン</span>
-        <span>
-          {formatTimestamp(currentTime)} / {formatTimestamp(duration)}
+    <div>
+      <div className="mb-2 flex items-baseline justify-between">
+        <span className="font-tc text-[10px] uppercase tracking-[0.3em] text-low">
+          Gaze Score
+        </span>
+        <span className="font-tc text-xs text-mid">
+          <span className="text-hi">{formatTimestamp(currentTime)}</span>
+          <span className="text-low"> / {formatTimestamp(duration)}</span>
         </span>
       </div>
       <div
@@ -188,7 +191,7 @@ export const ScoreTimeline: React.FC<ScoreTimelineProps> = ({
         aria-valuenow={Math.round(currentTime)}
         aria-valuetext={formatTimestamp(currentTime)}
         tabIndex={0}
-        className="relative cursor-pointer rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+        className="relative cursor-pointer rounded-md outline-none focus-visible:ring-2 focus-visible:ring-amber"
         onClick={(event) => seekFromPointer(event.clientX)}
         onKeyDown={handleKeyDown}
       >

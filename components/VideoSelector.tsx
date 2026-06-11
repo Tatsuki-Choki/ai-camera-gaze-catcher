@@ -8,25 +8,36 @@ const isSupportedVideo = (file: File) => (
   file.type === 'video/mp4' || file.type === 'video/quicktime' || file.type === 'video/webm'
 );
 
+// ビューファインダーの四隅マーカー
+const Corner: React.FC<{ className: string }> = ({ className }) => (
+  <span
+    aria-hidden="true"
+    className={`pointer-events-none absolute h-6 w-6 border-amber/70 transition-all duration-300 group-hover:border-amber ${className}`}
+  />
+);
+
 export const VideoSelector: React.FC<VideoSelectorProps> = ({ onVideoSelect }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [rejected, setRejected] = useState(false);
 
   const selectFile = (file: File | undefined) => {
     if (!file) {
       return;
     }
     if (isSupportedVideo(file)) {
+      setRejected(false);
       onVideoSelect(file);
       return;
     }
-    alert('有効なビデオファイル（MP4, MOV, WebM）を選択してください。');
+    setRejected(true);
   };
 
   return (
-    <div
-      className={`group relative flex min-h-[320px] cursor-pointer items-center justify-center overflow-hidden rounded-3xl border border-dashed bg-white transition hover:shadow-lg ${
-        isDragging ? 'border-blue-500 bg-blue-50' : 'border-slate-300 hover:border-blue-500'
+    <button
+      type="button"
+      className={`group relative flex min-h-[420px] w-full flex-col items-center justify-center gap-6 overflow-hidden bg-ink-950 px-6 py-16 text-center outline-none transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-amber sm:min-h-[480px] ${
+        isDragging ? 'bg-ink-850' : ''
       }`}
       onClick={() => inputRef.current?.click()}
       onDragOver={(event) => {
@@ -46,21 +57,70 @@ export const VideoSelector: React.FC<VideoSelectorProps> = ({ onVideoSelect }) =
         onChange={(event) => selectFile(event.target.files?.[0])}
         className="hidden"
         accept="video/mp4,video/quicktime,video/webm"
+        aria-hidden="true"
+        tabIndex={-1}
       />
-      <div className="p-6 text-center sm:p-8">
-        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-100 transition group-hover:scale-105 group-hover:bg-blue-200">
-          <svg className="h-8 w-8 text-blue-600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
-            <path fill="currentColor" d="M20 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm-4 2H8v14h8zm4 12h-2v2h2zM6 17H4v2h2zm14-4h-2v2h2zM6 13H4v2h2zm14-4h-2v2h2zM6 9H4v2h2zm14-4h-2v2h2zM6 5H4v2h2z" />
-          </svg>
-        </div>
-        <h2 className="mb-2 text-lg font-semibold text-slate-950">動画を選択</h2>
-        <p className="mb-4 text-sm text-slate-600">ドラッグ＆ドロップ、またはクリックして解析する動画を選択します。</p>
-        <div className="flex items-center justify-center gap-2 text-xs">
-          <span className="rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-700">MP4</span>
-          <span className="rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-700">MOV</span>
-          <span className="rounded-full bg-slate-100 px-3 py-1 font-medium text-slate-700">WebM</span>
-        </div>
+
+      {/* ビューファインダー枠 */}
+      <Corner className="left-6 top-6 border-l border-t" />
+      <Corner className="right-6 top-6 border-r border-t" />
+      <Corner className="bottom-6 left-6 border-b border-l" />
+      <Corner className="bottom-6 right-6 border-b border-r" />
+
+      {/* 中央クロスヘア */}
+      <span
+        aria-hidden="true"
+        className={`absolute left-1/2 top-[18%] -translate-x-1/2 text-low transition-all duration-500 ${
+          isDragging ? 'scale-125 text-amber' : 'group-hover:text-mid'
+        }`}
+      >
+        <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+          <circle cx="28" cy="28" r="20" stroke="currentColor" strokeWidth="1" opacity="0.5" />
+          <line x1="28" y1="0" x2="28" y2="12" stroke="currentColor" strokeWidth="1" />
+          <line x1="28" y1="44" x2="28" y2="56" stroke="currentColor" strokeWidth="1" />
+          <line x1="0" y1="28" x2="12" y2="28" stroke="currentColor" strokeWidth="1" />
+          <line x1="44" y1="28" x2="56" y2="28" stroke="currentColor" strokeWidth="1" />
+        </svg>
+      </span>
+
+      <div className="relative mt-24 animate-rise">
+        <p className="font-tc text-[10px] uppercase tracking-[0.4em] text-amber">
+          Drop your footage
+        </p>
+        <h2 className="font-credit mt-4 text-3xl font-bold leading-snug tracking-wide text-hi sm:text-4xl">
+          視線が、サムネになる。
+        </h2>
+        <p className="mt-4 text-sm leading-7 text-mid">
+          動画をドロップすると、カメラ目線の一瞬をAIが探し出します。
+          <br className="hidden sm:block" />
+          解析はすべてブラウザ内。動画が外に出ることはありません。
+        </p>
       </div>
-    </div>
+
+      <div className="relative flex items-center gap-2 animate-rise" style={{ animationDelay: '120ms' }}>
+        {['MP4', 'MOV', 'WEBM'].map((format) => (
+          <span
+            key={format}
+            className="font-tc rounded border border-line px-2.5 py-1 text-[10px] tracking-[0.2em] text-mid"
+          >
+            {format}
+          </span>
+        ))}
+      </div>
+
+      {rejected && (
+        <p className="relative text-sm text-rec" role="alert">
+          対応していない形式です。MP4 / MOV / WebM を選んでください。
+        </p>
+      )}
+
+      <span
+        className={`font-tc relative text-[11px] tracking-[0.25em] transition-colors ${
+          isDragging ? 'text-amber' : 'text-low'
+        }`}
+      >
+        {isDragging ? 'RELEASE TO LOAD' : 'クリックでファイルを選択'}
+      </span>
+    </button>
   );
 };

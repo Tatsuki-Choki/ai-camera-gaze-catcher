@@ -1,64 +1,151 @@
+/* フィルムクレジット用明朝 / UI用ゴシック / タイムコード用モノスペース */
+@import '@fontsource/shippori-mincho/500.css';
+@import '@fontsource/shippori-mincho/700.css';
+@import '@fontsource/zen-kaku-gothic-new/400.css';
+@import '@fontsource/zen-kaku-gothic-new/500.css';
+@import '@fontsource/zen-kaku-gothic-new/700.css';
+@import '@fontsource/ibm-plex-mono/400.css';
+@import '@fontsource/ibm-plex-mono/500.css';
+@import '@fontsource/ibm-plex-mono/600.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  /* カラーグレーディングルームのパレット */
+  --ink-950: #0a0a0c;      /* 最深部 */
+  --ink-900: #0e0e11;      /* ページ地 */
+  --ink-850: #121215;      /* ステージ */
+  --ink-800: #17171b;      /* カード */
+  --ink-750: #1d1d22;      /* ホバー面 */
+  --ink-700: #26262c;      /* 押下面 */
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.14);
+  --text-hi: #f2efe9;      /* わずかに暖色の白 */
+  --text-mid: #a8a49c;
+  --text-low: #6b675f;
+  --amber: #e9a23b;        /* タングステン・タリーランプ */
+  --amber-hi: #f5bc62;
+  --amber-deep: #b97a1e;
+  --amber-glow: rgba(233, 162, 59, 0.16);
+  --rec: #e0524a;          /* RECランプ */
+}
+
 @layer base {
   html {
-    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-family: 'Zen Kaku Gothic New', 'Hiragino Kaku Gothic ProN', sans-serif;
+    background: var(--ink-900);
+    color: var(--text-hi);
+  }
+
+  body {
+    min-height: 100vh;
+    background:
+      radial-gradient(1200px 600px at 50% -10%, rgba(233, 162, 59, 0.05), transparent 60%),
+      radial-gradient(900px 500px at 85% 110%, rgba(224, 82, 74, 0.04), transparent 60%),
+      var(--ink-900);
+  }
+
+  ::selection {
+    background: var(--amber);
+    color: var(--ink-950);
   }
 }
 
-/* Custom scrollbar */
+/* フィルムグレイン */
+.grain::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px 160px;
+}
+
+.font-credit {
+  font-family: 'Shippori Mincho', 'Hiragino Mincho ProN', serif;
+}
+
+.font-tc {
+  font-family: 'IBM Plex Mono', monospace;
+  font-feature-settings: 'tnum';
+}
+
+/* スクロールバー */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f3f4;
+  background: var(--ink-900);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #dadce0;
-  border-radius: 4px;
+  background: var(--ink-700);
+  border-radius: 5px;
+  border: 2px solid var(--ink-900);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #bdc1c6;
+  background: var(--text-low);
 }
 
-/* Range input styling */
-input[type="range"] {
+/* 感度スライダー：露出計のような細いトラック */
+input[type='range'] {
   -webkit-appearance: none;
   appearance: none;
   cursor: pointer;
-  height: 8px;
-  border-radius: 9999px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--ink-700);
+  outline: none;
 }
 
-input[type="range"]::-webkit-slider-track {
-  height: 8px;
-  border-radius: 4px;
-}
-
-input[type="range"]::-webkit-slider-thumb {
+input[type='range']::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 20px;
-  height: 20px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
-  background: #1A73E8;
-  cursor: pointer;
-  margin-top: -6px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  background: var(--amber);
+  border: 2px solid var(--ink-950);
+  box-shadow: 0 0 0 1px var(--amber-deep), 0 0 12px var(--amber-glow);
+  transition: transform 0.15s ease;
 }
 
-input[type="range"]::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
+input[type='range']::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+input[type='range']::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
-  background: #1A73E8;
-  cursor: pointer;
-  border: none;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+  background: var(--amber);
+  border: 2px solid var(--ink-950);
+  box-shadow: 0 0 0 1px var(--amber-deep), 0 0 12px var(--amber-glow);
+}
+
+input[type='range']:disabled::-webkit-slider-thumb {
+  background: var(--text-low);
+  box-shadow: none;
+}
+
+input[type='range']:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 4px;
+}
+
+/* RECランプの明滅 */
+@keyframes lamp {
+  0%, 100% { opacity: 1; box-shadow: 0 0 8px var(--rec); }
+  50% { opacity: 0.35; box-shadow: 0 0 2px transparent; }
+}
+
+.animate-lamp {
+  animation: lamp 1.4s ease-in-out infinite;
 }

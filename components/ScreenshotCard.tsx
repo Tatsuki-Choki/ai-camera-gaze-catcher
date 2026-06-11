@@ -51,6 +51,16 @@ const copyImage = async (blob: Blob) => {
   }
 };
 
+const SeekIcon: React.FC<{ className?: string }> = ({ className }) => (
+  <svg className={className} viewBox="0 0 16 16" fill="none" aria-hidden="true">
+    <path d="M3 2.5v11l9-5.5-9-5.5z" fill="currentColor" />
+    <rect x="13" y="2.5" width="1.5" height="11" fill="currentColor" />
+  </svg>
+);
+
+const overlayButtonClass =
+  'rounded-lg bg-ink-950/80 p-2 text-mid backdrop-blur transition hover:bg-ink-950 hover:text-hi focus-visible:ring-2 focus-visible:ring-amber outline-none disabled:opacity-50';
+
 export const ScreenshotCard: React.FC<ScreenshotCardProps> = ({
   screenshot,
   onPreview,
@@ -64,9 +74,9 @@ export const ScreenshotCard: React.FC<ScreenshotCardProps> = ({
   const score = Math.round(screenshot.score * 100);
   const scoreLabel = getScoreLabel(screenshot.score);
   const toneClass = {
-    strong: 'bg-emerald-100 text-emerald-700',
-    good: 'bg-blue-100 text-blue-700',
-    check: 'bg-amber-100 text-amber-700',
+    strong: 'bg-amber text-ink-950',
+    good: 'border border-amber/60 text-amber',
+    check: 'border border-line-strong text-mid',
   }[scoreLabel.tone];
 
   const handleCopy = async () => {
@@ -83,7 +93,7 @@ export const ScreenshotCard: React.FC<ScreenshotCardProps> = ({
 
   const handleDownload = () => {
     const extension = screenshot.fullBlob.type === 'image/png' ? 'png' : 'jpg';
-    const fileName = `camera-gaze_${timestamp.replace(':', '-')}_${score}.${extension}`;
+    const fileName = `camera-gaze_${formatTimestamp(screenshot.time, '-')}_${score}.${extension}`;
     const url = URL.createObjectURL(screenshot.fullBlob);
     const anchor = document.createElement('a');
     anchor.href = url;
@@ -94,65 +104,89 @@ export const ScreenshotCard: React.FC<ScreenshotCardProps> = ({
 
   return (
     <article
-      className={`group overflow-hidden rounded-3xl border bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-xl hover:shadow-slate-200/70 ${
-        screenshot.selected ? 'border-blue-500 ring-4 ring-blue-100' : 'border-slate-200'
+      className={`group relative overflow-hidden rounded-xl border bg-ink-800 transition duration-200 ${
+        screenshot.selected
+          ? 'border-amber shadow-[0_0_0_1px_var(--amber),0_8px_32px_-8px_var(--amber-glow)]'
+          : 'border-line hover:border-line-strong hover:bg-ink-750'
       }`}
     >
+      {/* 画像クリック = 選択トグル（サムネ選びの主動作） */}
       <button
         type="button"
-        onClick={() => onSeekTo(screenshot.time)}
-        className="relative block w-full bg-slate-100 text-left outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-        aria-label={`${timestamp} に移動`}
+        onClick={() => onToggleSelected(screenshot.id)}
+        aria-pressed={screenshot.selected}
+        aria-label={`${timestamp} の候補を${screenshot.selected ? '選択解除' : '選択'}（スコア ${score}）`}
+        className="relative block w-full bg-ink-950 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber"
       >
         <img
           src={screenshot.thumbUrl}
-          alt={`${timestamp} の候補（スコア ${score}）`}
+          alt=""
           loading="lazy"
-          className="aspect-video w-full object-cover"
+          className={`aspect-video w-full object-cover transition duration-200 ${
+            screenshot.selected ? '' : 'opacity-90 group-hover:opacity-100'
+          }`}
         />
-        <div className="absolute left-2 top-2 rounded-xl bg-white/90 px-2 py-1 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur">
-          {timestamp}
-        </div>
-        <div className={`absolute right-2 top-2 rounded-xl px-2 py-1 text-xs font-semibold ${toneClass}`}>
+
+        {/* 選択チェック */}
+        <span
+          aria-hidden="true"
+          className={`absolute left-2 top-2 flex h-6 w-6 items-center justify-center rounded-full border transition ${
+            screenshot.selected
+              ? 'border-amber bg-amber text-ink-950'
+              : 'border-line-strong bg-ink-950/70 text-transparent backdrop-blur group-hover:text-low'
+          }`}
+        >
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            <path d="M2 6.5l2.5 2.5L10 3.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+        </span>
+
+        <span
+          className={`font-tc absolute right-2 top-2 rounded px-1.5 py-0.5 text-[10px] font-semibold tracking-wider backdrop-blur ${toneClass}`}
+        >
           {scoreLabel.label} {score}
-        </div>
+        </span>
       </button>
 
-      <div className="flex items-center justify-between gap-2 p-3">
-        <label className="flex min-w-0 cursor-pointer items-center gap-2 text-sm font-semibold text-slate-700">
-          <input
-            type="checkbox"
-            checked={screenshot.selected}
-            onChange={() => onToggleSelected(screenshot.id)}
-            className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-600"
-          />
-          <span className="truncate">{screenshot.selected ? '選択中' : '候補'}</span>
-        </label>
-        <div className="flex items-center gap-1">
+      <div className="flex items-center justify-between px-3 py-2.5">
+        <span className="font-tc text-xs text-mid">{timestamp}</span>
+        <div className="flex items-center gap-0.5 opacity-60 transition group-hover:opacity-100">
+          <button
+            type="button"
+            onClick={() => onSeekTo(screenshot.time)}
+            className={overlayButtonClass}
+            aria-label={`${timestamp} に移動`}
+            title="この時刻へ移動"
+          >
+            <SeekIcon className="h-3.5 w-3.5" />
+          </button>
           <button
             type="button"
             onClick={() => onPreview(screenshot)}
-            className="rounded-xl p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-950 focus-visible:ring-2 focus-visible:ring-blue-500"
+            className={overlayButtonClass}
             aria-label="拡大表示"
+            title="拡大表示"
           >
-            <ExpandIcon className="h-4 w-4" />
+            <ExpandIcon className="h-3.5 w-3.5" />
           </button>
           <button
             type="button"
             onClick={handleCopy}
             disabled={copying}
-            className="rounded-xl p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-950 focus-visible:ring-2 focus-visible:ring-blue-500 disabled:opacity-50"
+            className={overlayButtonClass}
             aria-label="クリップボードにコピー"
+            title="コピー"
           >
-            <CopyIcon className="h-4 w-4" />
+            <CopyIcon className="h-3.5 w-3.5" />
           </button>
           <button
             type="button"
             onClick={handleDownload}
-            className="rounded-xl p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-950 focus-visible:ring-2 focus-visible:ring-blue-500"
+            className={overlayButtonClass}
             aria-label="ダウンロード"
+            title="ダウンロード"
           >
-            <DownloadIcon className="h-4 w-4" />
+            <DownloadIcon className="h-3.5 w-3.5" />
           </button>
         </div>
       </div>

@@ -47,27 +47,29 @@ export const ImageModal: React.FC<ImageModalProps> = ({ screenshot, isOpen, onCl
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-ink-950/90 backdrop-blur-sm animate-fade-in"
       role="dialog"
       aria-modal="true"
       aria-label={`${formatTimestamp(screenshot.time)} の候補プレビュー`}
       onClick={onClose}
     >
       <div
-        className="relative max-w-7xl max-h-[90vh] animate-scale-in"
+        className="relative max-h-[90vh] max-w-7xl animate-scale-in"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="absolute top-4 right-4 z-10 flex items-center gap-3">
-          <span className="text-sm text-slate-700 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full">
-            {formatTimestamp(screenshot.time)} / score {Math.round(screenshot.score * 100)}
+        <div className="absolute right-4 top-4 z-10 flex items-center gap-2">
+          <span className="font-tc rounded-full border border-line bg-ink-900/90 px-3 py-1.5 text-xs text-hi backdrop-blur">
+            {formatTimestamp(screenshot.time)}
+            <span className="text-low"> / </span>
+            <span className="text-amber">{Math.round(screenshot.score * 100)}</span>
           </span>
           <button
             ref={closeButtonRef}
             onClick={onClose}
-            className="bg-white/90 backdrop-blur-sm text-slate-700 rounded-full p-2 hover:bg-white transition-all focus-visible:ring-2 focus-visible:ring-blue-500"
+            className="rounded-full border border-line bg-ink-900/90 p-2 text-mid backdrop-blur transition hover:text-hi focus-visible:ring-2 focus-visible:ring-amber outline-none"
             aria-label="閉じる"
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -75,7 +77,7 @@ export const ImageModal: React.FC<ImageModalProps> = ({ screenshot, isOpen, onCl
         <img
           src={fullUrl ?? screenshot.thumbUrl}
           alt={`${formatTimestamp(screenshot.time)} の候補`}
-          className="max-w-full max-h-[90vh] object-contain rounded-lg"
+          className="max-h-[90vh] max-w-full rounded-lg border border-line object-contain"
         />
       </div>
     </div>
