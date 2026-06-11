@@ -174,12 +174,12 @@ export const ScoreTimeline: React.FC<ScoreTimelineProps> = ({
   return (
     <div>
       <div className="mb-2 flex items-baseline justify-between">
-        <span className="font-tc text-[10px] uppercase tracking-[0.3em] text-low">
+        <span className="font-tc text-[10px] uppercase tracking-[0.3em] text-stage-low">
           Gaze Score
         </span>
-        <span className="font-tc text-xs text-mid">
-          <span className="text-hi">{formatTimestamp(currentTime)}</span>
-          <span className="text-low"> / {formatTimestamp(duration)}</span>
+        <span className="font-tc text-xs text-stage-mid">
+          <span className="text-stage-hi">{formatTimestamp(currentTime)}</span>
+          <span className="text-stage-low"> / {formatTimestamp(duration)}</span>
         </span>
       </div>
       <div

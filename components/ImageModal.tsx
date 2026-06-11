@@ -47,7 +47,7 @@ export const ImageModal: React.FC<ImageModalProps> = ({ screenshot, isOpen, onCl
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-ink-950/90 backdrop-blur-sm animate-fade-in"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-sm animate-fade-in"
       role="dialog"
       aria-modal="true"
       aria-label={`${formatTimestamp(screenshot.time)} の候補プレビュー`}
@@ -58,7 +58,7 @@ export const ImageModal: React.FC<ImageModalProps> = ({ screenshot, isOpen, onCl
         onClick={(e) => e.stopPropagation()}
       >
         <div className="absolute right-4 top-4 z-10 flex items-center gap-2">
-          <span className="font-tc rounded-full border border-line bg-ink-900/90 px-3 py-1.5 text-xs text-hi backdrop-blur">
+          <span className="font-tc rounded-full border border-white/15 bg-black/70 px-3 py-1.5 text-xs text-white backdrop-blur">
             {formatTimestamp(screenshot.time)}
             <span className="text-low"> / </span>
             <span className="text-amber">{Math.round(screenshot.score * 100)}</span>
@@ -66,7 +66,7 @@ export const ImageModal: React.FC<ImageModalProps> = ({ screenshot, isOpen, onCl
           <button
             ref={closeButtonRef}
             onClick={onClose}
-            className="rounded-full border border-line bg-ink-900/90 p-2 text-mid backdrop-blur transition hover:text-hi focus-visible:ring-2 focus-visible:ring-amber outline-none"
+            className="rounded-full border border-white/15 bg-black/70 p-2 text-white/70 backdrop-blur transition hover:text-white focus-visible:ring-2 focus-visible:ring-amber outline-none"
             aria-label="閉じる"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

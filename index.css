@@ -12,49 +12,76 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ライトモード（デフォルト）: 暖色の紙白スタジオ */
 :root {
-  /* カラーグレーディングルームのパレット */
-  --ink-950: #0a0a0c;      /* 最深部 */
-  --ink-900: #0e0e11;      /* ページ地 */
-  --ink-850: #121215;      /* ステージ */
-  --ink-800: #17171b;      /* カード */
-  --ink-750: #1d1d22;      /* ホバー面 */
-  --ink-700: #26262c;      /* 押下面 */
+  --base: #f6f4ef;          /* ページ地 */
+  --panel: #ffffff;         /* カード・パネル */
+  --panel-2: #f0ede6;       /* ホバー面 */
+  --inset: #e9e5dc;         /* 凹み面（トラック・セグメント地） */
+  --line: rgba(30, 26, 20, 0.1);
+  --line-strong: rgba(30, 26, 20, 0.18);
+  --text-hi: #211d18;
+  --text-mid: #6e675d;
+  --text-low: #a59e91;
+  --amber: #d9881f;         /* タングステン・タリーランプ */
+  --amber-hi: #c2790f;      /* ホバー（ライトでは濃く） */
+  --amber-deep: #a36410;
+  --amber-glow: rgba(217, 136, 31, 0.22);
+  --rec: #d6453c;
+  --on-amber: #16120c;      /* アンバー上の文字 */
+  --shadow-panel: 0 1px 2px rgba(30, 26, 20, 0.04), 0 8px 24px -12px rgba(30, 26, 20, 0.12);
+
+  /* 映像ステージは常にダーク（動画とサムネ判断のため） */
+  --stage: #101012;
+  --stage-deep: #0a0a0c;
+  --stage-line: rgba(255, 255, 255, 0.09);
+  --stage-hi: #f2efe9;
+  --stage-mid: #a8a49c;
+  --stage-low: #6b675f;
+}
+
+[data-theme='dark'] {
+  --base: #0e0e11;
+  --panel: #17171b;
+  --panel-2: #1d1d22;
+  --inset: #26262c;
   --line: rgba(255, 255, 255, 0.08);
   --line-strong: rgba(255, 255, 255, 0.14);
-  --text-hi: #f2efe9;      /* わずかに暖色の白 */
+  --text-hi: #f2efe9;
   --text-mid: #a8a49c;
   --text-low: #6b675f;
-  --amber: #e9a23b;        /* タングステン・タリーランプ */
+  --amber: #e9a23b;
   --amber-hi: #f5bc62;
   --amber-deep: #b97a1e;
   --amber-glow: rgba(233, 162, 59, 0.16);
-  --rec: #e0524a;          /* RECランプ */
+  --rec: #e0524a;
+  --on-amber: #0a0a0c;
+  --shadow-panel: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px -12px rgba(0, 0, 0, 0.6);
 }
 
 @layer base {
   html {
     font-family: 'Zen Kaku Gothic New', 'Hiragino Kaku Gothic ProN', sans-serif;
-    background: var(--ink-900);
+    background: var(--base);
     color: var(--text-hi);
   }
 
   body {
     min-height: 100vh;
     background:
-      radial-gradient(1200px 600px at 50% -10%, rgba(233, 162, 59, 0.05), transparent 60%),
-      radial-gradient(900px 500px at 85% 110%, rgba(224, 82, 74, 0.04), transparent 60%),
-      var(--ink-900);
+      radial-gradient(1100px 500px at 50% -8%, var(--amber-glow), transparent 65%),
+      var(--base);
+    background-attachment: fixed;
   }
 
   ::selection {
     background: var(--amber);
-    color: var(--ink-950);
+    color: var(--on-amber);
   }
 }
 
-/* フィルムグレイン */
-.grain::before {
+/* フィルムグレイン（ダークのみ） */
+[data-theme='dark'] .grain::before {
   content: '';
   position: fixed;
   inset: 0;
@@ -81,13 +108,12 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--ink-900);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--ink-700);
+  background: var(--line-strong);
   border-radius: 5px;
-  border: 2px solid var(--ink-900);
 }
 
 ::-webkit-scrollbar-thumb:hover {
@@ -99,35 +125,35 @@ input[type='range'] {
   -webkit-appearance: none;
   appearance: none;
   cursor: pointer;
-  height: 2px;
-  border-radius: 1px;
-  background: var(--ink-700);
+  height: 3px;
+  border-radius: 2px;
+  background: var(--inset);
   outline: none;
 }
 
 input[type='range']::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
   background: var(--amber);
-  border: 2px solid var(--ink-950);
-  box-shadow: 0 0 0 1px var(--amber-deep), 0 0 12px var(--amber-glow);
+  border: 2.5px solid var(--panel);
+  box-shadow: 0 0 0 1px var(--amber-deep), 0 2px 8px var(--amber-glow);
   transition: transform 0.15s ease;
 }
 
 input[type='range']::-webkit-slider-thumb:hover {
-  transform: scale(1.2);
+  transform: scale(1.15);
 }
 
 input[type='range']::-moz-range-thumb {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
   background: var(--amber);
-  border: 2px solid var(--ink-950);
-  box-shadow: 0 0 0 1px var(--amber-deep), 0 0 12px var(--amber-glow);
+  border: 2.5px solid var(--panel);
+  box-shadow: 0 0 0 1px var(--amber-deep), 0 2px 8px var(--amber-glow);
 }
 
 input[type='range']:disabled::-webkit-slider-thumb {
@@ -148,4 +174,14 @@ input[type='range']:focus-visible {
 
 .animate-lamp {
   animation: lamp 1.4s ease-in-out infinite;
+}
+
+/* 解析開始ボタンの誘目（ステップ2がアクティブのとき） */
+@keyframes beacon {
+  0%, 100% { box-shadow: 0 0 0 0 var(--amber-glow); }
+  50% { box-shadow: 0 0 0 8px transparent; }
+}
+
+.animate-beacon {
+  animation: beacon 2s ease-in-out infinite;
 }

@@ -1,16 +1,22 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import JSZip from 'jszip';
 import { CandidateGrid } from './components/CandidateGrid';
-import { ControlRail } from './components/ControlRail';
 import { ScoreTimeline } from './components/ScoreTimeline';
 import { SelectionBar } from './components/SelectionBar';
+import { Sidebar } from './components/Sidebar';
 import { TopBar } from './components/TopBar';
 import { VideoWorkspace } from './components/VideoWorkspace';
 import { useAnalysisEngine } from './hooks/useAnalysisEngine';
+import { useTheme } from './hooks/useTheme';
 import { formatTimestamp } from './services/formatTime';
 import type { ExportFormat, ScanMode, Screenshot } from './types';
 
+const isSupportedVideo = (file: File) => (
+  file.type === 'video/mp4' || file.type === 'video/quicktime' || file.type === 'video/webm'
+);
+
 export default function App(): React.ReactNode {
+  const { theme, toggleTheme } = useTheme();
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoSrc, setVideoSrc] = useState<string | null>(null);
   const [sensitivity, setSensitivity] = useState(0.25);
@@ -21,6 +27,7 @@ export default function App(): React.ReactNode {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const filePickerRef = useRef<HTMLInputElement>(null);
 
   const selectedCount = screenshots.filter((screenshot) => screenshot.selected).length;
 
@@ -177,60 +184,81 @@ export default function App(): React.ReactNode {
         candidateCount={screenshots.length}
         selectedCount={selectedCount}
         hasVideo={Boolean(videoSrc)}
+        theme={theme}
+        onToggleTheme={toggleTheme}
         onNewVideo={handleNewVideo}
       />
 
-      <main className="mx-auto flex max-w-6xl flex-col gap-5 px-4 pb-32 pt-6 sm:px-6">
-        <VideoWorkspace
-          videoSrc={videoSrc}
-          videoRef={videoRef}
+      {/* サイドバー用のファイル選択（ドロップゾーンとは独立に開ける） */}
+      <input
+        ref={filePickerRef}
+        type="file"
+        accept="video/mp4,video/quicktime,video/webm"
+        className="hidden"
+        aria-hidden="true"
+        tabIndex={-1}
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          if (file && isSupportedVideo(file)) {
+            handleVideoSelect(file);
+          }
+          event.target.value = '';
+        }}
+      />
+
+      <div className="mx-auto flex max-w-7xl flex-col gap-0 px-4 sm:px-6 lg:flex-row lg:gap-8">
+        <Sidebar
+          hasVideo={Boolean(videoSrc)}
           status={status}
-          progressPercent={progress.percent}
-          onVideoSelect={handleVideoSelect}
-          timeline={duration > 0 && timeline.length > 0 ? (
-            <ScoreTimeline
-              points={timeline}
-              candidates={screenshots}
-              duration={duration}
-              currentTime={currentTime}
-              threshold={threshold}
-              onSeek={handleSeekTo}
-            />
-          ) : null}
-        />
-
-        {videoSrc && (
-          <ControlRail
-            hasVideo={Boolean(videoSrc)}
-            status={status}
-            progressPercent={progress.percent}
-            etaSeconds={progress.etaSeconds}
-            errorMessage={errorMessage}
-            sensitivity={sensitivity}
-            scanMode={scanMode}
-            exportFormat={exportFormat}
-            onSensitivityChange={setSensitivity}
-            onScanModeChange={setScanMode}
-            onExportFormatChange={setExportFormat}
-            onStartAnalysis={handleStartAnalysis}
-            onCancelAnalysis={cancelAnalysis}
-          />
-        )}
-
-        <CandidateGrid
-          screenshots={screenshots}
+          candidateCount={screenshots.length}
           selectedCount={selectedCount}
-          onSeekTo={handleSeekToCandidate}
-          onToggleSelected={handleToggleSelected}
+          progressPercent={progress.percent}
+          etaSeconds={progress.etaSeconds}
+          errorMessage={errorMessage}
+          sensitivity={sensitivity}
+          scanMode={scanMode}
+          exportFormat={exportFormat}
+          zipping={zipping}
+          onPickVideo={() => filePickerRef.current?.click()}
+          onSensitivityChange={setSensitivity}
+          onScanModeChange={setScanMode}
+          onExportFormatChange={setExportFormat}
+          onStartAnalysis={handleStartAnalysis}
+          onCancelAnalysis={cancelAnalysis}
           onSelectAll={handleSelectAll}
+          onDownloadSelected={handleDownloadSelected}
         />
 
-        {videoSrc && (
-          <p className="text-center text-[11px] leading-5 text-low">
-            解析はすべてブラウザ内で実行されます。動画ファイルがアップロードされることはありません。
-          </p>
-        )}
-      </main>
+        <main className="min-w-0 flex-1 pb-32 lg:py-5">
+          <div className="flex flex-col gap-5">
+            <VideoWorkspace
+              videoSrc={videoSrc}
+              videoRef={videoRef}
+              status={status}
+              progressPercent={progress.percent}
+              onVideoSelect={handleVideoSelect}
+              timeline={duration > 0 && timeline.length > 0 ? (
+                <ScoreTimeline
+                  points={timeline}
+                  candidates={screenshots}
+                  duration={duration}
+                  currentTime={currentTime}
+                  threshold={threshold}
+                  onSeek={handleSeekTo}
+                />
+              ) : null}
+            />
+
+            <CandidateGrid
+              screenshots={screenshots}
+              selectedCount={selectedCount}
+              onSeekTo={handleSeekToCandidate}
+              onToggleSelected={handleToggleSelected}
+              onSelectAll={handleSelectAll}
+            />
+          </div>
+        </main>
+      </div>
 
       <SelectionBar
         selectedCount={selectedCount}

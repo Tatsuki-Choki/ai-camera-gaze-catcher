@@ -73,7 +73,7 @@ export const CandidateGrid: React.FC<CandidateGridProps> = ({
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <div role="group" aria-label="並び順" className="flex rounded-lg border border-line bg-ink-950 p-0.5">
+          <div role="group" aria-label="並び順" className="flex rounded-lg border border-line bg-inset p-0.5">
             {([['time', '時刻順'], ['score', 'スコア順']] as const).map(([key, label]) => (
               <button
                 key={key}
@@ -82,7 +82,7 @@ export const CandidateGrid: React.FC<CandidateGridProps> = ({
                 aria-pressed={sortKey === key}
                 className={`rounded-md px-3 py-1.5 text-xs font-medium transition ${
                   sortKey === key
-                    ? 'bg-ink-750 text-hi shadow-[inset_0_0_0_1px_var(--line-strong)]'
+                    ? 'bg-panel text-hi shadow-sm'
                     : 'text-low hover:text-mid'
                 }`}
               >

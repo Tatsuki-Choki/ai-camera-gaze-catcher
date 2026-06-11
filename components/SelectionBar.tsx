@@ -20,7 +20,7 @@ export const SelectionBar: React.FC<SelectionBarProps> = ({
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-5 z-40 flex justify-center px-4">
-      <div className="pointer-events-auto flex items-center gap-3 rounded-2xl border border-line-strong bg-ink-800/95 py-2 pl-5 pr-2 shadow-[0_16px_48px_-12px_rgba(0,0,0,0.9)] backdrop-blur-md animate-slide-up">
+      <div className="pointer-events-auto flex items-center gap-3 rounded-2xl border border-line-strong bg-panel/95 py-2 pl-5 pr-2 shadow-panel backdrop-blur-md animate-slide-up">
         <span className="font-tc text-sm text-hi">
           <span className="text-amber">{selectedCount}</span>
           <span className="text-mid"> 件選択中</span>
@@ -37,7 +37,7 @@ export const SelectionBar: React.FC<SelectionBarProps> = ({
           type="button"
           onClick={onDownloadSelected}
           disabled={zipping}
-          className="rounded-xl bg-amber px-5 py-2.5 text-sm font-bold text-ink-950 transition hover:bg-amber-hi disabled:cursor-not-allowed disabled:opacity-60"
+          className="rounded-xl bg-amber px-5 py-2.5 text-sm font-bold text-on-amber transition hover:bg-amber-hi disabled:cursor-not-allowed disabled:opacity-60"
         >
           {zipping ? 'ZIP作成中…' : 'ZIPで保存'}
         </button>

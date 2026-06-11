@@ -25,11 +25,11 @@ export const VideoWorkspace: React.FC<VideoWorkspaceProps> = ({
   return (
     <section
       aria-label="動画ステージ"
-      className="overflow-hidden rounded-2xl border border-line bg-ink-850 shadow-[0_24px_80px_-24px_rgba(0,0,0,0.8)]"
+      className="overflow-hidden rounded-2xl border border-line bg-stage shadow-[0_24px_64px_-24px_rgba(20,16,10,0.5)]"
     >
       {videoSrc ? (
         <>
-          <div className="relative bg-ink-950">
+          <div className="relative bg-stage-deep">
             <video
               ref={videoRef}
               src={videoSrc}
@@ -39,9 +39,9 @@ export const VideoWorkspace: React.FC<VideoWorkspaceProps> = ({
               playsInline
             />
             {isProcessing && (
-              <div className="pointer-events-none absolute right-4 top-4 flex items-center gap-2 rounded-full border border-line bg-ink-900/90 px-3 py-1.5 backdrop-blur">
+              <div className="pointer-events-none absolute right-4 top-4 flex items-center gap-2 rounded-full border border-stage-line bg-stage/90 px-3 py-1.5 backdrop-blur">
                 <span className="h-2 w-2 rounded-full bg-rec animate-lamp" aria-hidden="true" />
-                <span className="font-tc text-[11px] tracking-[0.2em] text-hi">
+                <span className="font-tc text-[11px] tracking-[0.2em] text-stage-hi">
                   SCAN {Math.round(progressPercent)}%
                 </span>
               </div>
@@ -50,7 +50,7 @@ export const VideoWorkspace: React.FC<VideoWorkspaceProps> = ({
 
           {/* 解析中の進捗ストリップ */}
           {isProcessing && (
-            <div className="h-0.5 bg-ink-700" role="presentation">
+            <div className="h-0.5 bg-white/10" role="presentation">
               <div
                 className="h-full bg-amber transition-[width] duration-300"
                 style={{ width: `${Math.max(0, Math.min(100, progressPercent))}%` }}
@@ -59,7 +59,7 @@ export const VideoWorkspace: React.FC<VideoWorkspaceProps> = ({
           )}
 
           {timeline && (
-            <div className="border-t border-line px-4 py-3 sm:px-5">
+            <div className="border-t border-stage-line px-4 py-3 sm:px-5">
               {timeline}
             </div>
           )}

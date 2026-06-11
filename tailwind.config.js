@@ -11,14 +11,12 @@ export default {
   theme: {
     extend: {
       colors: {
-        ink: {
-          950: 'var(--ink-950)',
-          900: 'var(--ink-900)',
-          850: 'var(--ink-850)',
-          800: 'var(--ink-800)',
-          750: 'var(--ink-750)',
-          700: 'var(--ink-700)',
+        base: 'var(--base)',
+        panel: {
+          DEFAULT: 'var(--panel)',
+          2: 'var(--panel-2)',
         },
+        inset: 'var(--inset)',
         line: {
           DEFAULT: 'var(--line)',
           strong: 'var(--line-strong)',
@@ -31,7 +29,19 @@ export default {
           hi: 'var(--amber-hi)',
           deep: 'var(--amber-deep)',
         },
+        'on-amber': 'var(--on-amber)',
         rec: 'var(--rec)',
+        stage: {
+          DEFAULT: 'var(--stage)',
+          deep: 'var(--stage-deep)',
+          line: 'var(--stage-line)',
+          hi: 'var(--stage-hi)',
+          mid: 'var(--stage-mid)',
+          low: 'var(--stage-low)',
+        },
+      },
+      boxShadow: {
+        panel: 'var(--shadow-panel)',
       },
       animation: {
         'fade-in': 'fadeIn 0.25s ease-out',

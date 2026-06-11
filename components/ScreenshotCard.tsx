@@ -59,7 +59,7 @@ const SeekIcon: React.FC<{ className?: string }> = ({ className }) => (
 );
 
 const overlayButtonClass =
-  'rounded-lg bg-ink-950/80 p-2 text-mid backdrop-blur transition hover:bg-ink-950 hover:text-hi focus-visible:ring-2 focus-visible:ring-amber outline-none disabled:opacity-50';
+  'rounded-lg bg-panel-2 p-2 text-mid transition hover:bg-inset hover:text-hi focus-visible:ring-2 focus-visible:ring-amber outline-none disabled:opacity-50';
 
 export const ScreenshotCard: React.FC<ScreenshotCardProps> = ({
   screenshot,
@@ -74,7 +74,7 @@ export const ScreenshotCard: React.FC<ScreenshotCardProps> = ({
   const score = Math.round(screenshot.score * 100);
   const scoreLabel = getScoreLabel(screenshot.score);
   const toneClass = {
-    strong: 'bg-amber text-ink-950',
+    strong: 'bg-amber text-on-amber',
     good: 'border border-amber/60 text-amber',
     check: 'border border-line-strong text-mid',
   }[scoreLabel.tone];
@@ -104,10 +104,10 @@ export const ScreenshotCard: React.FC<ScreenshotCardProps> = ({
 
   return (
     <article
-      className={`group relative overflow-hidden rounded-xl border bg-ink-800 transition duration-200 ${
+      className={`group relative overflow-hidden rounded-xl border bg-panel shadow-panel transition duration-200 ${
         screenshot.selected
           ? 'border-amber shadow-[0_0_0_1px_var(--amber),0_8px_32px_-8px_var(--amber-glow)]'
-          : 'border-line hover:border-line-strong hover:bg-ink-750'
+          : 'border-line hover:border-line-strong hover:bg-panel-2'
       }`}
     >
       {/* 画像クリック = 選択トグル（サムネ選びの主動作） */}
@@ -116,7 +116,7 @@ export const ScreenshotCard: React.FC<ScreenshotCardProps> = ({
         onClick={() => onToggleSelected(screenshot.id)}
         aria-pressed={screenshot.selected}
         aria-label={`${timestamp} の候補を${screenshot.selected ? '選択解除' : '選択'}（スコア ${score}）`}
-        className="relative block w-full bg-ink-950 outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber"
+        className="relative block w-full bg-stage-deep outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber"
       >
         <img
           src={screenshot.thumbUrl}
@@ -132,8 +132,8 @@ export const ScreenshotCard: React.FC<ScreenshotCardProps> = ({
           aria-hidden="true"
           className={`absolute left-2 top-2 flex h-6 w-6 items-center justify-center rounded-full border transition ${
             screenshot.selected
-              ? 'border-amber bg-amber text-ink-950'
-              : 'border-line-strong bg-ink-950/70 text-transparent backdrop-blur group-hover:text-low'
+              ? 'border-amber bg-amber text-on-amber'
+              : 'border-white/30 bg-black/50 text-transparent backdrop-blur group-hover:text-white/60'
           }`}
         >
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">

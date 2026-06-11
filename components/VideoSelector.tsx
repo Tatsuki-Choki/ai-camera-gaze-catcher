@@ -36,8 +36,8 @@ export const VideoSelector: React.FC<VideoSelectorProps> = ({ onVideoSelect }) =
   return (
     <button
       type="button"
-      className={`group relative flex min-h-[420px] w-full flex-col items-center justify-center gap-6 overflow-hidden bg-ink-950 px-6 py-16 text-center outline-none transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-amber sm:min-h-[480px] ${
-        isDragging ? 'bg-ink-850' : ''
+      className={`group relative flex min-h-[400px] w-full flex-col items-center justify-center gap-5 overflow-hidden px-6 py-14 text-center outline-none transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber sm:min-h-[460px] ${
+        isDragging ? 'bg-white/5' : ''
       }`}
       onClick={() => inputRef.current?.click()}
       onDragOver={(event) => {
@@ -62,19 +62,19 @@ export const VideoSelector: React.FC<VideoSelectorProps> = ({ onVideoSelect }) =
       />
 
       {/* ビューファインダー枠 */}
-      <Corner className="left-6 top-6 border-l border-t" />
-      <Corner className="right-6 top-6 border-r border-t" />
-      <Corner className="bottom-6 left-6 border-b border-l" />
-      <Corner className="bottom-6 right-6 border-b border-r" />
+      <Corner className="left-5 top-5 border-l border-t" />
+      <Corner className="right-5 top-5 border-r border-t" />
+      <Corner className="bottom-5 left-5 border-b border-l" />
+      <Corner className="bottom-5 right-5 border-b border-r" />
 
-      {/* 中央クロスヘア */}
+      {/* クロスヘア */}
       <span
         aria-hidden="true"
-        className={`absolute left-1/2 top-[18%] -translate-x-1/2 text-low transition-all duration-500 ${
-          isDragging ? 'scale-125 text-amber' : 'group-hover:text-mid'
+        className={`text-stage-low transition-all duration-500 ${
+          isDragging ? 'scale-125 text-amber' : 'group-hover:text-stage-mid'
         }`}
       >
-        <svg width="56" height="56" viewBox="0 0 56 56" fill="none">
+        <svg width="52" height="52" viewBox="0 0 56 56" fill="none">
           <circle cx="28" cy="28" r="20" stroke="currentColor" strokeWidth="1" opacity="0.5" />
           <line x1="28" y1="0" x2="28" y2="12" stroke="currentColor" strokeWidth="1" />
           <line x1="28" y1="44" x2="28" y2="56" stroke="currentColor" strokeWidth="1" />
@@ -83,25 +83,36 @@ export const VideoSelector: React.FC<VideoSelectorProps> = ({ onVideoSelect }) =
         </svg>
       </span>
 
-      <div className="relative mt-24 animate-rise">
+      <div className="relative animate-rise">
         <p className="font-tc text-[10px] uppercase tracking-[0.4em] text-amber">
-          Drop your footage
+          Step 1 — Drop your footage
         </p>
-        <h2 className="font-credit mt-4 text-3xl font-bold leading-snug tracking-wide text-hi sm:text-4xl">
+        <h2 className="font-credit mt-3 text-3xl font-bold leading-snug tracking-wide text-stage-hi sm:text-4xl">
           視線が、サムネになる。
         </h2>
-        <p className="mt-4 text-sm leading-7 text-mid">
-          動画をドロップすると、カメラ目線の一瞬をAIが探し出します。
+        <p className="mt-3 text-sm leading-7 text-stage-mid">
+          ここに動画をドロップ（またはクリックで選択）すると、
           <br className="hidden sm:block" />
-          解析はすべてブラウザ内。動画が外に出ることはありません。
+          カメラ目線の一瞬をAIが探し出します。
         </p>
       </div>
 
-      <div className="relative flex items-center gap-2 animate-rise" style={{ animationDelay: '120ms' }}>
+      <span
+        className={`relative inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-bold transition animate-rise ${
+          isDragging
+            ? 'bg-amber-hi text-on-amber'
+            : 'bg-amber text-on-amber group-hover:bg-amber-hi'
+        }`}
+        style={{ animationDelay: '100ms' }}
+      >
+        {isDragging ? 'ここにドロップ' : '動画ファイルを選択'}
+      </span>
+
+      <div className="relative flex items-center gap-2 animate-rise" style={{ animationDelay: '160ms' }}>
         {['MP4', 'MOV', 'WEBM'].map((format) => (
           <span
             key={format}
-            className="font-tc rounded border border-line px-2.5 py-1 text-[10px] tracking-[0.2em] text-mid"
+            className="font-tc rounded border border-stage-line px-2.5 py-1 text-[10px] tracking-[0.2em] text-stage-mid"
           >
             {format}
           </span>
@@ -114,12 +125,8 @@ export const VideoSelector: React.FC<VideoSelectorProps> = ({ onVideoSelect }) =
         </p>
       )}
 
-      <span
-        className={`font-tc relative text-[11px] tracking-[0.25em] transition-colors ${
-          isDragging ? 'text-amber' : 'text-low'
-        }`}
-      >
-        {isDragging ? 'RELEASE TO LOAD' : 'クリックでファイルを選択'}
+      <span className="font-tc relative text-[10px] tracking-[0.25em] text-stage-low">
+        動画はアップロードされません — 解析はブラウザ内で完結
       </span>
     </button>
   );
