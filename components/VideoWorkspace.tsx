@@ -1,12 +1,13 @@
 import React from 'react';
-import { AnalysisStatus } from '../types';
+import { AnalysisStatus, type EngineKind } from '../types';
 import { VideoSelector } from './VideoSelector';
 
 interface VideoWorkspaceProps {
   videoSrc: string | null;
   videoRef: React.RefObject<HTMLVideoElement | null>;
   status: AnalysisStatus;
-  progress: number;
+  progressPercent: number;
+  engineKind: EngineKind | null;
   candidateCount: number;
   selectedCount: number;
   onVideoSelect: (file: File) => void;
@@ -16,7 +17,8 @@ export const VideoWorkspace: React.FC<VideoWorkspaceProps> = ({
   videoSrc,
   videoRef,
   status,
-  progress,
+  progressPercent,
+  engineKind,
   candidateCount,
   selectedCount,
   onVideoSelect,
@@ -32,7 +34,7 @@ export const VideoWorkspace: React.FC<VideoWorkspaceProps> = ({
             AI カメラ目線キャッチャー
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-            動画から正面視線に近い瞬間を検出し、候補を見比べて保存します。
+            動画から正面視線に近い瞬間を検出し、候補を見比べて保存します。解析中も動画は自由に操作できます。
           </p>
         </div>
         <div className="flex gap-2">
@@ -45,7 +47,7 @@ export const VideoWorkspace: React.FC<VideoWorkspaceProps> = ({
             <div className="text-xs text-slate-500">選択中</div>
           </div>
           <div className="rounded-2xl border border-white bg-white/80 px-4 py-3 shadow-sm backdrop-blur">
-            <div className="text-lg font-semibold text-slate-950">{Math.round(progress)}%</div>
+            <div className="text-lg font-semibold text-slate-950">{Math.round(progressPercent)}%</div>
             <div className="text-xs text-slate-500">進捗</div>
           </div>
         </div>
@@ -60,18 +62,13 @@ export const VideoWorkspace: React.FC<VideoWorkspaceProps> = ({
                 src={videoSrc}
                 controls
                 className="aspect-video h-full w-full"
-                muted
                 preload="metadata"
+                playsInline
               />
               {isProcessing && (
-                <div className="absolute inset-x-4 top-4 rounded-2xl border border-blue-100 bg-white/90 p-3 text-slate-800 shadow-lg backdrop-blur">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="font-medium">解析中</span>
-                    <span>{Math.round(progress)}%</span>
-                  </div>
-                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-slate-200">
-                    <div className="h-full rounded-full bg-blue-600" style={{ width: `${Math.max(0, Math.min(100, progress))}%` }} />
-                  </div>
+                <div className="pointer-events-none absolute right-3 top-3 flex items-center gap-2 rounded-full border border-blue-100 bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-lg backdrop-blur">
+                  <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-blue-600" />
+                  {engineKind === 'webcodecs' ? '高速解析中' : '解析中'} {Math.round(progressPercent)}%
                 </div>
               )}
             </div>

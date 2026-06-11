@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { scoreGaze } from './gazeScoring';
-import type { GazeScoreInput } from '../types';
+import type { GazeFrameFeatures } from '../types';
 
-const centeredInput: GazeScoreInput = {
+const centeredInput: GazeFrameFeatures = {
   hasFace: true,
   eyeLookOutLeft: 0.02,
   eyeLookOutRight: 0.02,
@@ -12,6 +12,8 @@ const centeredInput: GazeScoreInput = {
   eyeLookUpRight: 0.01,
   eyeLookDownLeft: 0.01,
   eyeLookDownRight: 0.01,
+  eyeBlinkLeft: 0.05,
+  eyeBlinkRight: 0.05,
   headYaw: 0.02,
   headPitch: 0.01,
   headRoll: 0.01,
@@ -36,7 +38,7 @@ describe('scoreGaze', () => {
     const result = scoreGaze({
       ...centeredInput,
       eyeLookOutLeft: 0.7,
-      eyeLookOutRight: 0.7,
+      eyeLookInRight: 0.7,
       headYaw: 0.8,
     }, 0.25);
 
@@ -44,11 +46,51 @@ describe('scoreGaze', () => {
     expect(result.isCandidate).toBe(false);
   });
 
-  it('感度を上げると候補判定が厳しくなる', () => {
-    const borderline: GazeScoreInput = {
+  it('左右の目が同じ方向を向く自然な視線ずれを検出する', () => {
+    // 左を見る: 左目がout、右目がin
+    const lookingLeft = scoreGaze({
       ...centeredInput,
-      eyeLookDownLeft: 0.22,
-      eyeLookDownRight: 0.22,
+      eyeLookOutLeft: 0.45,
+      eyeLookInRight: 0.45,
+    }, 0.25);
+
+    expect(lookingLeft.isCandidate).toBe(false);
+  });
+
+  it('まばたき中のフレームを候補から外す', () => {
+    const blinking = scoreGaze({
+      ...centeredInput,
+      eyeBlinkLeft: 0.8,
+      eyeBlinkRight: 0.75,
+    }, 0.25);
+
+    expect(blinking.score).toBe(0);
+    expect(blinking.isCandidate).toBe(false);
+  });
+
+  it('半目状態はスコアを減衰させる', () => {
+    const halfBlink = scoreGaze({
+      ...centeredInput,
+      eyeBlinkLeft: 0.45,
+      eyeBlinkRight: 0.45,
+    }, 0.25);
+    const open = scoreGaze(centeredInput, 0.25);
+
+    expect(halfBlink.score).toBeLessThan(open.score);
+    expect(halfBlink.score).toBeGreaterThan(0);
+  });
+
+  it('首をかしげただけならカメラ目線として許容する', () => {
+    const tilted = scoreGaze({ ...centeredInput, headRoll: 0.3 }, 0.25);
+
+    expect(tilted.isCandidate).toBe(true);
+  });
+
+  it('感度を上げると候補判定が厳しくなる', () => {
+    const borderline: GazeFrameFeatures = {
+      ...centeredInput,
+      eyeLookDownLeft: 0.18,
+      eyeLookDownRight: 0.18,
       headPitch: 0.2,
     };
 
