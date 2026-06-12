@@ -61,12 +61,12 @@ export const ImageModal: React.FC<ImageModalProps> = ({ screenshot, isOpen, onCl
           <span className="font-tc rounded-full border border-white/15 bg-black/70 px-3 py-1.5 text-xs text-white backdrop-blur">
             {formatTimestamp(screenshot.time)}
             <span className="text-low"> / </span>
-            <span className="text-amber">{Math.round(screenshot.score * 100)}</span>
+            <span className="text-white">{Math.round(screenshot.score * 100)}</span>
           </span>
           <button
             ref={closeButtonRef}
             onClick={onClose}
-            className="rounded-full border border-white/15 bg-black/70 p-2 text-white/70 backdrop-blur transition hover:text-white focus-visible:ring-2 focus-visible:ring-amber outline-none"
+            className="rounded-full border border-white/15 bg-black/70 p-2 text-white/70 backdrop-blur transition hover:text-white focus-visible:ring-2 focus-visible:ring-accent outline-none"
             aria-label="閉じる"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

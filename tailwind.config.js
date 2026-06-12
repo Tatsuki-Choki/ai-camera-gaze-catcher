@@ -24,12 +24,12 @@ export default {
         hi: 'var(--text-hi)',
         mid: 'var(--text-mid)',
         low: 'var(--text-low)',
-        amber: {
-          DEFAULT: 'var(--amber)',
-          hi: 'var(--amber-hi)',
-          deep: 'var(--amber-deep)',
+        accent: {
+          DEFAULT: 'var(--accent)',
+          hi: 'var(--accent-hi)',
+          soft: 'var(--accent-soft)',
         },
-        'on-amber': 'var(--on-amber)',
+        'on-accent': 'var(--on-accent)',
         rec: 'var(--rec)',
         stage: {
           DEFAULT: 'var(--stage)',
@@ -42,6 +42,7 @@ export default {
       },
       boxShadow: {
         panel: 'var(--shadow-panel)',
+        float: 'var(--shadow-float)',
       },
       animation: {
         'fade-in': 'fadeIn 0.25s ease-out',

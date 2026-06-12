@@ -66,7 +66,7 @@ export const ScoreTimeline: React.FC<ScoreTimelineProps> = ({
     }
 
     // 閾値ライン
-    ctx.strokeStyle = 'rgba(242, 239, 233, 0.18)';
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
     ctx.setLineDash([4, 4]);
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -91,7 +91,7 @@ export const ScoreTimeline: React.FC<ScoreTimelineProps> = ({
       }
     }
     if (started) {
-      ctx.strokeStyle = '#e9a23b';
+      ctx.strokeStyle = '#9b9b9b';
       ctx.lineWidth = 1.5;
       ctx.stroke();
 
@@ -99,8 +99,8 @@ export const ScoreTimeline: React.FC<ScoreTimelineProps> = ({
       ctx.lineTo(0, height);
       ctx.closePath();
       const gradient = ctx.createLinearGradient(0, 0, 0, height);
-      gradient.addColorStop(0, 'rgba(233, 162, 59, 0.28)');
-      gradient.addColorStop(1, 'rgba(233, 162, 59, 0.02)');
+      gradient.addColorStop(0, 'rgba(155, 155, 155, 0.22)');
+      gradient.addColorStop(1, 'rgba(155, 155, 155, 0.02)');
       ctx.fillStyle = gradient;
       ctx.fill();
     }
@@ -111,9 +111,9 @@ export const ScoreTimeline: React.FC<ScoreTimelineProps> = ({
       const y = yOf(candidate.score);
       ctx.beginPath();
       ctx.arc(x, y, 4, 0, Math.PI * 2);
-      ctx.fillStyle = candidate.selected ? '#e9a23b' : '#17171b';
+      ctx.fillStyle = candidate.selected ? '#ffffff' : '#191919';
       ctx.fill();
-      ctx.strokeStyle = '#e9a23b';
+      ctx.strokeStyle = '#9b9b9b';
       ctx.lineWidth = 1.5;
       ctx.stroke();
     }
@@ -136,7 +136,7 @@ export const ScoreTimeline: React.FC<ScoreTimelineProps> = ({
     ctx.clearRect(0, 0, width, height);
 
     const playheadX = (currentTime / duration) * width;
-    ctx.strokeStyle = '#f2efe9';
+    ctx.strokeStyle = '#ffffff';
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(playheadX, 0);
@@ -191,7 +191,7 @@ export const ScoreTimeline: React.FC<ScoreTimelineProps> = ({
         aria-valuenow={Math.round(currentTime)}
         aria-valuetext={formatTimestamp(currentTime)}
         tabIndex={0}
-        className="relative cursor-pointer rounded-md outline-none focus-visible:ring-2 focus-visible:ring-amber"
+        className="relative cursor-pointer rounded-md outline-none focus-visible:ring-2 focus-visible:ring-accent"
         onClick={(event) => seekFromPointer(event.clientX)}
         onKeyDown={handleKeyDown}
       >

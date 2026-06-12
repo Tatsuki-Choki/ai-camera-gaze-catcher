@@ -40,11 +40,11 @@ export const TopBar: React.FC<TopBarProps> = ({
         <div className="flex items-center gap-3">
           <span
             className={`h-2.5 w-2.5 rounded-full ${
-              isProcessing ? 'bg-rec animate-lamp' : status === AnalysisStatus.Done ? 'bg-amber' : 'bg-inset'
+              isProcessing ? 'bg-rec animate-lamp' : status === AnalysisStatus.Done ? 'bg-accent' : 'bg-inset'
             }`}
             aria-hidden="true"
           />
-          <h1 className="font-credit text-base font-bold tracking-wide text-hi">
+          <h1 className="text-base font-bold tracking-wide text-hi">
             カメラ目線キャッチャー
           </h1>
           <span className="font-tc hidden text-[10px] uppercase tracking-[0.3em] text-low md:inline">
@@ -57,7 +57,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             className="font-tc hidden items-center gap-1.5 text-[11px] tracking-widest text-mid sm:flex"
             role="status"
           >
-            <span className={isProcessing ? 'text-rec' : status === AnalysisStatus.Done ? 'text-amber' : ''}>
+            <span className={isProcessing ? 'text-rec' : status === AnalysisStatus.Done ? 'text-accent' : ''}>
               {statusLabel[status]}
             </span>
             {isProcessing && engineKind === 'seek' && (
@@ -71,7 +71,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             </span>
             <span className="text-low">·</span>
             <span>
-              選択 <span className={selectedCount > 0 ? 'text-amber' : 'text-hi'}>{selectedCount}</span>
+              選択 <span className={selectedCount > 0 ? 'text-accent' : 'text-hi'}>{selectedCount}</span>
             </span>
           </div>
 
@@ -89,7 +89,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           <button
             type="button"
             onClick={onToggleTheme}
-            className="rounded-lg border border-line p-2 text-mid transition hover:border-line-strong hover:text-hi focus-visible:ring-2 focus-visible:ring-amber outline-none"
+            className="rounded-lg border border-line p-2 text-mid transition hover:border-line-strong hover:text-hi focus-visible:ring-2 focus-visible:ring-accent outline-none"
             aria-label={theme === 'light' ? 'ダークモードに切り替え' : 'ライトモードに切り替え'}
             title={theme === 'light' ? 'ダークモード' : 'ライトモード'}
           >

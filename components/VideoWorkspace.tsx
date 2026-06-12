@@ -25,7 +25,7 @@ export const VideoWorkspace: React.FC<VideoWorkspaceProps> = ({
   return (
     <section
       aria-label="動画ステージ"
-      className="overflow-hidden rounded-2xl border border-line bg-stage shadow-[0_24px_64px_-24px_rgba(20,16,10,0.5)]"
+      className="overflow-hidden rounded-2xl border border-line bg-stage shadow-panel"
     >
       {videoSrc ? (
         <>
@@ -52,7 +52,7 @@ export const VideoWorkspace: React.FC<VideoWorkspaceProps> = ({
           {isProcessing && (
             <div className="h-0.5 bg-white/10" role="presentation">
               <div
-                className="h-full bg-amber transition-[width] duration-300"
+                className="h-full bg-stage-hi transition-[width] duration-300"
                 style={{ width: `${Math.max(0, Math.min(100, progressPercent))}%` }}
               />
             </div>

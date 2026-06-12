@@ -177,7 +177,7 @@ export default function App(): React.ReactNode {
   }, [videoSrc]);
 
   return (
-    <div className="grain min-h-screen">
+    <div className="min-h-screen">
       <TopBar
         status={status}
         engineKind={engineKind}

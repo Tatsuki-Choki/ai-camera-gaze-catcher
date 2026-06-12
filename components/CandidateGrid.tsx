@@ -62,10 +62,10 @@ export const CandidateGrid: React.FC<CandidateGridProps> = ({
     <section aria-label="候補一覧">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="font-tc text-[10px] uppercase tracking-[0.4em] text-amber">
+          <p className="font-tc text-[10px] uppercase tracking-[0.4em] text-accent">
             Candidates
           </p>
-          <h2 className="font-credit mt-1 text-xl font-bold tracking-wide text-hi">
+          <h2 className="mt-1 text-xl font-bold tracking-wide text-hi">
             候補 <span className="font-tc text-base text-mid">{screenshots.length}</span>
           </h2>
           <p className="mt-1 text-xs text-mid">

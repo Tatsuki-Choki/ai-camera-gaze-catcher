@@ -12,7 +12,7 @@ const isSupportedVideo = (file: File) => (
 const Corner: React.FC<{ className: string }> = ({ className }) => (
   <span
     aria-hidden="true"
-    className={`pointer-events-none absolute h-6 w-6 border-amber/70 transition-all duration-300 group-hover:border-amber ${className}`}
+    className={`pointer-events-none absolute h-6 w-6 border-stage-low transition-all duration-300 group-hover:border-stage-mid ${className}`}
   />
 );
 
@@ -36,7 +36,7 @@ export const VideoSelector: React.FC<VideoSelectorProps> = ({ onVideoSelect }) =
   return (
     <button
       type="button"
-      className={`group relative flex min-h-[400px] w-full flex-col items-center justify-center gap-5 overflow-hidden px-6 py-14 text-center outline-none transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-amber sm:min-h-[460px] ${
+      className={`group relative flex min-h-[400px] w-full flex-col items-center justify-center gap-5 overflow-hidden px-6 py-14 text-center outline-none transition-colors duration-300 focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent sm:min-h-[460px] ${
         isDragging ? 'bg-white/5' : ''
       }`}
       onClick={() => inputRef.current?.click()}
@@ -71,7 +71,7 @@ export const VideoSelector: React.FC<VideoSelectorProps> = ({ onVideoSelect }) =
       <span
         aria-hidden="true"
         className={`text-stage-low transition-all duration-500 ${
-          isDragging ? 'scale-125 text-amber' : 'group-hover:text-stage-mid'
+          isDragging ? 'scale-125 text-stage-hi' : 'group-hover:text-stage-mid'
         }`}
       >
         <svg width="52" height="52" viewBox="0 0 56 56" fill="none">
@@ -84,10 +84,10 @@ export const VideoSelector: React.FC<VideoSelectorProps> = ({ onVideoSelect }) =
       </span>
 
       <div className="relative animate-rise">
-        <p className="font-tc text-[10px] uppercase tracking-[0.4em] text-amber">
+        <p className="font-tc text-[10px] uppercase tracking-[0.4em] text-stage-mid">
           Step 1 — Drop your footage
         </p>
-        <h2 className="font-credit mt-3 text-3xl font-bold leading-snug tracking-wide text-stage-hi sm:text-4xl">
+        <h2 className="mt-3 text-3xl font-bold leading-snug tracking-wide text-stage-hi sm:text-4xl">
           視線が、サムネになる。
         </h2>
         <p className="mt-3 text-sm leading-7 text-stage-mid">
@@ -98,10 +98,8 @@ export const VideoSelector: React.FC<VideoSelectorProps> = ({ onVideoSelect }) =
       </div>
 
       <span
-        className={`relative inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-bold transition animate-rise ${
-          isDragging
-            ? 'bg-amber-hi text-on-amber'
-            : 'bg-amber text-on-amber group-hover:bg-amber-hi'
+        className={`relative inline-flex items-center gap-2 rounded-lg px-6 py-3 text-sm font-semibold text-[#191919] transition animate-rise ${
+          isDragging ? 'bg-white' : 'bg-white/90 group-hover:bg-white'
         }`}
         style={{ animationDelay: '100ms' }}
       >

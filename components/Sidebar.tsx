@@ -32,9 +32,9 @@ const StepMarker: React.FC<{ state: StepState; number: number }> = ({ state, num
     aria-hidden="true"
     className={`font-tc flex h-7 w-7 shrink-0 items-center justify-center rounded-full border text-xs font-semibold transition ${
       state === 'done'
-        ? 'border-amber bg-amber text-on-amber'
+        ? 'border-accent bg-accent text-on-accent'
         : state === 'active'
-          ? 'border-amber text-amber shadow-[0_0_0_4px_var(--amber-glow)]'
+          ? 'border-accent text-accent shadow-[0_0_0_3px_var(--accent-soft)]'
           : 'border-line-strong text-low'
     }`}
   >
@@ -63,7 +63,7 @@ const Step: React.FC<StepProps> = ({ number, state, title, description, isLast =
       <span
         aria-hidden="true"
         className={`absolute left-3.5 top-8 h-[calc(100%-1.5rem)] w-px ${
-          state === 'done' ? 'bg-amber/50' : 'bg-line'
+          state === 'done' ? 'bg-accent/50' : 'bg-line'
         }`}
       />
     )}
@@ -194,7 +194,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                 <button
                   type="button"
                   onClick={onPickVideo}
-                  className="animate-beacon w-full rounded-xl bg-amber px-4 py-2.5 text-sm font-bold text-on-amber transition hover:bg-amber-hi"
+                  className="w-full rounded-xl bg-accent px-4 py-2.5 text-sm font-bold text-on-accent transition hover:bg-accent-hi"
                 >
                   動画を選択
                 </button>
@@ -214,7 +214,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       <label htmlFor="sensitivity" className="text-xs font-medium text-mid">
                         検出感度
                       </label>
-                      <span className="font-tc text-xs text-amber">{sensitivityPercent}%</span>
+                      <span className="font-tc text-xs text-accent">{sensitivityPercent}%</span>
                     </div>
                     <input
                       id="sensitivity"
@@ -265,7 +265,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       </div>
                       <div className="h-1.5 overflow-hidden rounded-full bg-inset">
                         <div
-                          className="h-full rounded-full bg-amber transition-[width] duration-300"
+                          className="h-full rounded-full bg-accent transition-[width] duration-300"
                           style={{ width: `${Math.max(0, Math.min(100, progressPercent))}%` }}
                         />
                       </div>
@@ -282,8 +282,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       type="button"
                       onClick={onStartAnalysis}
                       disabled={isInitializing}
-                      className={`w-full rounded-xl bg-amber px-4 py-2.5 text-sm font-bold text-on-amber transition hover:bg-amber-hi disabled:cursor-not-allowed disabled:bg-inset disabled:text-low ${
-                        step2 === 'active' ? 'animate-beacon' : ''
+                      className={`w-full rounded-xl bg-accent px-4 py-2.5 text-sm font-bold text-on-accent transition hover:bg-accent-hi disabled:cursor-not-allowed disabled:bg-inset disabled:text-low ${
+                        step2 === 'active' ? '' : ''
                       }`}
                     >
                       {isInitializing ? '準備中…' : isDone || candidateCount > 0 ? 'もう一度解析' : '解析を開始'}
@@ -313,7 +313,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       候補 <span className="text-hi">{candidateCount}</span>
                     </span>
                     <span className="text-mid">
-                      選択 <span className={selectedCount > 0 ? 'text-amber' : 'text-hi'}>{selectedCount}</span>
+                      選択 <span className={selectedCount > 0 ? 'text-accent' : 'text-hi'}>{selectedCount}</span>
                     </span>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
@@ -329,7 +329,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                       type="button"
                       onClick={onDownloadSelected}
                       disabled={zipping || selectedCount === 0}
-                      className="rounded-xl bg-amber px-3 py-2 text-xs font-bold text-on-amber transition hover:bg-amber-hi disabled:cursor-not-allowed disabled:bg-inset disabled:text-low"
+                      className="rounded-xl bg-accent px-3 py-2 text-xs font-bold text-on-accent transition hover:bg-accent-hi disabled:cursor-not-allowed disabled:bg-inset disabled:text-low"
                     >
                       {zipping ? '作成中…' : 'ZIP保存'}
                     </button>
